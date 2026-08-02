@@ -242,6 +242,54 @@ nav.tabs button[aria-selected="true"]::after{
 .tag[data-s="burnt"]{color:var(--ember)} .tag[data-s="burnt"]:hover{border-color:var(--ember);background:var(--ember-soft)}
 .tag .d,.tag .kbd{color:var(--ink-3)}
 
+/* ── answer checking ────────────────────────────────────── */
+.modebar{
+  display:flex;border:1px solid var(--line);border-radius:5px;
+  overflow:hidden;align-self:center;
+}
+.modebar button{
+  padding:7px 15px;font-size:12.5px;color:var(--ink-3);background:var(--surface);
+  border-right:1px solid var(--line);transition:background .15s,color .15s;
+}
+.modebar button:last-child{border-right:none}
+.modebar button:hover:not([aria-pressed="true"]){color:var(--ink)}
+.modebar button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);font-weight:600}
+.modebar button:disabled{opacity:.4;cursor:default}
+
+.ansrow{display:flex;gap:8px;width:100%;max-width:430px}
+.ansinput{
+  flex:1 1 auto;min-width:0;height:46px;padding:0 14px;
+  border:1px solid var(--line-2);border-radius:4px;background:var(--surface);
+  color:var(--ink);font-family:var(--font-jp-sans);font-size:19px;
+  text-align:center;letter-spacing:.04em;
+}
+.ansinput::placeholder{font-family:var(--font-ui);font-size:13.5px;letter-spacing:0;color:var(--ink-3)}
+.ansinput:focus{border-color:var(--accent);outline:none}
+.ansbtn{
+  height:46px;padding:0 20px;border-radius:4px;background:var(--accent);
+  color:var(--accent-ink);font-size:14px;font-weight:600;white-space:nowrap;
+  display:inline-flex;align-items:center;gap:8px;transition:filter .15s,background .15s;
+}
+.ansbtn:hover{filter:brightness(1.08)}
+.ansbtn.listening{background:var(--ember)}
+.ansbtn:disabled{opacity:.45;cursor:default}
+.ansnote{font-size:11.5px;color:var(--ink-3);text-align:center;margin:0;line-height:1.5}
+.ansnote code{font-family:var(--font-mono);font-size:11px;color:var(--ink-2)}
+
+.verdict{
+  width:100%;display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;
+  border:1px solid;border-radius:4px;padding:11px 14px;font-size:13.5px;
+}
+.verdict .mark{font-size:15px;font-weight:700;letter-spacing:.04em}
+.verdict .heard{font-family:var(--font-jp-sans);font-size:15px;color:var(--ink)}
+.verdict small{color:var(--ink-2);font-size:12.5px}
+.verdict[data-v="ok"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.verdict[data-v="close"]{border-color:var(--gold);background:var(--gold-soft);color:var(--gold)}
+.verdict[data-v="bad"]{border-color:var(--ember);background:var(--ember-soft);color:var(--ember)}
+
+.tag[data-suggested="1"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.tag .sug{font-family:var(--font-mono);font-size:8px;letter-spacing:.12em;color:var(--accent)}
+
 .notice{
   width:100%;border:1px solid var(--line);border-left:3px solid var(--gold);
   border-radius:4px;padding:11px 14px;font-size:13px;color:var(--ink-2);
@@ -688,7 +736,7 @@ const LABEL = {"new":"NEW","soso":"SO-SO","burnt":"BURNT"};
 
 let S = load();
 
-function blank(){ return {v:1, p:{}, days:{}, newPerDay:10, theme:null, autoSync:false}; }
+function blank(){ return {v:1, p:{}, days:{}, newPerDay:10, theme:null, autoSync:false, mode:null}; }
 function load(){
   try{
     const raw = localStorage.getItem(KEY);
@@ -937,30 +985,227 @@ function saveClip(blob){
   });
 }
 
-/* ── speech synthesis ───────────────────────────────────── */
-let jaVoice = null;
+/* ── model reading (speech synthesis) ─────────────────────
+   A device with no Japanese voice installed will happily accept an
+   utterance and then emit synthesis-failed, or nothing at all. Track
+   that so the button can say why it's silent instead of just being
+   silent.                                                          */
+let jaVoice = null, voiceState = "probing", speaking = false;
+const VOICE_HELP =
+  "No Japanese text-to-speech voice is installed on this device, so there's " +
+  "nothing to play the reading with. macOS: System Settings → Accessibility → " +
+  "Spoken Content → System Voice → Manage Voices → Japanese. Windows: Settings → " +
+  "Time &amp; language → Language → add 日本語 with its speech pack. On Linux, install " +
+  "a Japanese voice for speech-dispatcher (e.g. espeak-ng). Everything else — " +
+  "recording, checking, and scheduling — works without it.";
+
 function pickVoice(){
-  if(!window.speechSynthesis) return;
+  if(!window.speechSynthesis){ voiceState = "unsupported"; return; }
   const vs = speechSynthesis.getVoices() || [];
   jaVoice = vs.filter(function(v){ return /^ja/i.test(v.lang); })[0] || null;
+  if(jaVoice) voiceState = "ok";
+  else if(vs.length) voiceState = "none";   // voices loaded, but none Japanese
+  // no voices at all yet: stay "probing" until voiceschanged or a failed attempt
 }
 if(window.speechSynthesis){
   pickVoice();
-  speechSynthesis.onvoiceschanged = pickVoice;
+  speechSynthesis.addEventListener("voiceschanged", function(){
+    pickVoice();
+    if(view === "practice") render();
+  });
+  // Some browsers never fire voiceschanged when the list is empty.
+  setTimeout(function(){
+    if(voiceState === "probing"){
+      pickVoice();
+      if(voiceState === "probing" && !(speechSynthesis.getVoices() || []).length){
+        voiceState = "none";
+        if(view === "practice") render();
+      }
+    }
+  }, 1500);
+}else{
+  voiceState = "unsupported";
 }
+
 function speak(text){
-  if(!window.speechSynthesis) return;
+  if(!window.speechSynthesis){ voiceState = "unsupported"; render(); return; }
   try{
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
-    u.lang = "ja-JP"; u.rate = 0.85;
+    u.lang = "ja-JP";
+    u.rate = 0.8;
     if(jaVoice) u.voice = jaVoice;
+    let settled = false;
+    const settle = function(state){
+      if(settled) return;
+      settled = true;
+      speaking = false;
+      if(state) voiceState = state;
+      if(view === "practice") render();
+    };
+    u.onstart = function(){ voiceState = "ok"; };
+    u.onend   = function(){ settle(null); };
+    u.onerror = function(){ settle("none"); };
+    speaking = true;
+    render();
     speechSynthesis.speak(u);
-  }catch(e){}
+    // No event within 3s means nothing is going to happen.
+    setTimeout(function(){ if(speaking) settle("none"); }, 3000);
+  }catch(e){
+    speaking = false; voiceState = "none"; render();
+  }
+}
+
+/* ── answer checking ──────────────────────────────────────
+   Judge a spoken or typed reading against the word. Speech
+   recognition usually returns kanji rather than kana, and someone
+   without a Japanese keyboard can only type romaji, so accept every
+   sensible spelling of the same answer.                            */
+const ROMAJI = {
+  kya:"きゃ",kyu:"きゅ",kyo:"きょ",gya:"ぎゃ",gyu:"ぎゅ",gyo:"ぎょ",
+  sha:"しゃ",shu:"しゅ",sho:"しょ",sya:"しゃ",syu:"しゅ",syo:"しょ",
+  cha:"ちゃ",chu:"ちゅ",cho:"ちょ",tya:"ちゃ",tyu:"ちゅ",tyo:"ちょ",
+  nya:"にゃ",nyu:"にゅ",nyo:"にょ",hya:"ひゃ",hyu:"ひゅ",hyo:"ひょ",
+  mya:"みゃ",myu:"みゅ",myo:"みょ",rya:"りゃ",ryu:"りゅ",ryo:"りょ",
+  bya:"びゃ",byu:"びゅ",byo:"びょ",pya:"ぴゃ",pyu:"ぴゅ",pyo:"ぴょ",
+  jya:"じゃ",jyu:"じゅ",jyo:"じょ",zya:"じゃ",zyu:"じゅ",zyo:"じょ",
+  ja:"じゃ",ju:"じゅ",jo:"じょ",
+  shi:"し",chi:"ち",tsu:"つ",ji:"じ",fu:"ふ",
+  ka:"か",ki:"き",ku:"く",ke:"け",ko:"こ",
+  sa:"さ",si:"し",su:"す",se:"せ",so:"そ",
+  ta:"た",ti:"ち",tu:"つ",te:"て",to:"と",
+  na:"な",ni:"に",nu:"ぬ",ne:"ね",no:"の",
+  ha:"は",hi:"ひ",hu:"ふ",he:"へ",ho:"ほ",
+  ma:"ま",mi:"み",mu:"む",me:"め",mo:"も",
+  ya:"や",yu:"ゆ",yo:"よ",
+  ra:"ら",ri:"り",ru:"る",re:"れ",ro:"ろ",
+  wa:"わ",wo:"を",
+  ga:"が",gi:"ぎ",gu:"ぐ",ge:"げ",go:"ご",
+  za:"ざ",zi:"じ",zu:"ず",ze:"ぜ",zo:"ぞ",
+  da:"だ",di:"ぢ",du:"づ",de:"で",do:"ど",
+  ba:"ば",bi:"び",bu:"ぶ",be:"べ",bo:"ぼ",
+  pa:"ぱ",pi:"ぴ",pu:"ぷ",pe:"ぺ",po:"ぽ",
+  a:"あ",i:"い",u:"う",e:"え",o:"お"
+};
+function romajiToKana(s){
+  let out = "", i = 0;
+  const low = s.toLowerCase();
+  while(i < low.length){
+    const c = low.charAt(i);
+    if(!/[a-z]/.test(c)){ out += s.charAt(i); i++; continue; }
+    // small tsu: doubled consonant (kk, tt, ss …) but not nn
+    if(c !== "n" && c === low.charAt(i+1) && !/[aiueo]/.test(c)){
+      out += "っ"; i++; continue;
+    }
+    let hit = null;
+    for(let len = 3; len >= 1; len--){
+      const chunk = low.substr(i, len);
+      if(ROMAJI[chunk]){ hit = chunk; break; }
+    }
+    if(hit){ out += ROMAJI[hit]; i += hit.length; continue; }
+    if(c === "n"){                       // ん before a consonant or at the end
+      out += "ん";
+      i += (low.charAt(i+1) === "'" || low.charAt(i+1) === "n") ? 2 : 1;
+      continue;
+    }
+    out += s.charAt(i); i++;
+  }
+  return out;
+}
+function kataToHira(s){
+  return s.replace(/[ァ-ヶ]/g, function(c){
+    return String.fromCharCode(c.charCodeAt(0) - 0x60);
+  });
+}
+function normAns(s){
+  return kataToHira(String(s || "").normalize("NFKC"))
+    .toLowerCase()
+    .replace(/[\s　。、．，・！？!?.,'"「」（）()~〜ー―\-]/g, "");
+}
+function editDistance(a, b){
+  const m = a.length, n = b.length;
+  let prev = Array.from({length:n+1}, function(_,i){ return i; });
+  for(let i = 1; i <= m; i++){
+    const cur = [i];
+    for(let j = 1; j <= n; j++){
+      cur[j] = Math.min(prev[j] + 1, cur[j-1] + 1,
+                        prev[j-1] + (a.charAt(i-1) === b.charAt(j-1) ? 0 : 1));
+    }
+    prev = cur;
+  }
+  return prev[n];
+}
+/* Returns "ok" | "close" | "bad". Accepts the reading, the written
+   form, and (for typed input) romaji spelled out. */
+function judge(input, w){
+  const raw = String(input || "").trim();
+  if(!raw) return "bad";
+  const targets = [normAns(w.kana), normAns(w.k)];
+  const tries = [normAns(raw)];
+  if(/[a-zA-Z]/.test(raw)) tries.push(normAns(romajiToKana(raw)));
+  for(const t of tries){
+    if(!t) continue;
+    if(targets.indexOf(t) >= 0) return "ok";
+  }
+  for(const t of tries){
+    if(!t) continue;
+    for(const g of targets){
+      if(g && editDistance(t, g) <= (g.length > 4 ? 2 : 1)) return "close";
+    }
+  }
+  return "bad";
+}
+
+/* ── voice typing (speech recognition) ──────────────────── */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recog = null, listening = false, srError = "";
+
+function startListening(){
+  if(!SR || listening || recording) return;
+  try{
+    recog = new SR();
+    recog.lang = "ja-JP";
+    recog.interimResults = false;
+    recog.maxAlternatives = 5;
+    recog.continuous = false;
+    srError = "";
+    recog.onresult = function(ev){
+      const res = ev.results[0];
+      const heard = [];
+      for(let i = 0; i < res.length; i++) heard.push(res[i].transcript);
+      listening = false;
+      submitAnswer(heard, "speak");
+    };
+    recog.onerror = function(ev){
+      listening = false;
+      srError = {
+        "no-speech": "Didn't catch anything — try again a bit louder.",
+        "not-allowed": "Microphone access is blocked for this page.",
+        "service-not-allowed": "This browser build has no speech recognition service.",
+        "network": "Speech recognition needs an internet connection.",
+        "audio-capture": "No microphone found."
+      }[ev.error] || ("Speech recognition failed (" + ev.error + ").");
+      render();
+    };
+    recog.onend = function(){
+      if(listening){ listening = false; render(); }
+    };
+    listening = true;
+    render();
+    recog.start();
+  }catch(e){
+    listening = false;
+    srError = "Couldn't start speech recognition.";
+    render();
+  }
+}
+function stopListening(){
+  if(recog && listening){ try{ recog.stop(); }catch(e){} }
+  listening = false;
 }
 
 /* ── practice render ────────────────────────────────────── */
-let revealed = false;
+let revealed = false, checked = null, pendingInput = "";
 
 function current(){ return queue.length ? BY_ID[queue[0]] : null; }
 
@@ -1025,14 +1270,25 @@ function render(){
   html +=   '<div class="glyph" style="--gsize:'+glyphSize(w.k)+'">'+esc(w.k)+'</div>';
   html += '</div>';
 
+  const mode = answerMode();
   if(!revealed){
-    html += '<p class="prompt">Say it out loud, then record</p>';
+    html += mode === "self"  ? '<p class="prompt">Say it out loud, then record</p>'
+          : mode === "speak" ? '<p class="prompt">Say the reading — I\'ll check it</p>'
+          :                    '<p class="prompt">Type the reading — kana or romaji</p>';
   }else{
     html += '<p class="prompt">Compare yours with the model reading</p>';
   }
 
+  const modelLabel = speaking ? "◆ Playing"
+                   : voiceState === "none" || voiceState === "unsupported" ? "▶ Model —"
+                   : "▶ Model";
+  const modelOff = !revealed || voiceState === "unsupported" || voiceState === "none";
   html += '<div class="rec-row">';
-  html +=   '<button class="mini" id="listenBtn"'+(revealed?"":" disabled")+' title="'+(revealed?"Hear the model reading":"Reveal first")+'">▶ Model <span class="kbd">L</span></button>';
+  html +=   '<button class="mini" id="listenBtn"'+(modelOff?" disabled":"")+' title="'+
+              (voiceState === "none" || voiceState === "unsupported"
+                 ? "No Japanese voice on this device"
+                 : (revealed ? "Hear the model reading" : "Answer first"))+
+            '">'+modelLabel+' <span class="kbd">L</span></button>';
   html +=   '<button class="rec-btn'+(recording?" on":"")+'" id="recBtn" aria-label="'+(recording?"Stop recording":"Start recording")+'"><i></i></button>';
   html +=   '<button class="mini" id="playBtn"'+(hasClip?"":" disabled")+'>▶ Mine <span class="kbd">P</span></button>';
   html += '</div>';
@@ -1049,21 +1305,72 @@ function render(){
             ' Open this page in its own browser tab and allow the mic, or keep going without it — saying the word aloud still counts, and the tagging and scheduling below work exactly the same.</div>';
   }
 
+  if(voiceState === "none" && revealed){
+    html += '<div class="notice"><b>No model audio.</b> '+VOICE_HELP+'</div>';
+  }
+
   if(!revealed){
-    html += '<button class="reveal-btn" id="revealBtn">Reveal reading &amp; meaning <span class="kbd">SPACE</span></button>';
+    if(mode === "self"){
+      html += '<button class="reveal-btn" id="revealBtn">Reveal reading &amp; meaning <span class="kbd">SPACE</span></button>';
+    }else if(mode === "type"){
+      html += '<div class="ansrow">';
+      html +=   '<input class="ansinput" id="ansInput" type="text" autocomplete="off" '+
+                'autocapitalize="off" autocorrect="off" spellcheck="false" '+
+                'placeholder="reading — えいきょう or eikyou" aria-label="Type the reading">';
+      html +=   '<button class="ansbtn" id="ansBtn">Check</button>';
+      html += '</div>';
+      html += '<p class="ansnote">Type kana, or romaji if you have no Japanese keyboard — '+
+              '<code>eikyou</code> becomes えいきょう. Press Enter to check, or '+
+              '<a href="#" id="skipLink">skip this one</a>.</p>';
+    }else{
+      html += '<div class="ansrow" style="justify-content:center">';
+      html +=   '<button class="ansbtn'+(listening?" listening":"")+'" id="ansBtn">'+
+                  (listening ? "● Listening — say it now" : "🎤 Speak the reading")+'</button>';
+      html += '</div>';
+      html += '<p class="ansnote">'+(srError ? '<b style="color:var(--ember)">'+esc(srError)+'</b><br>' : '')+
+              'Your speech is transcribed and compared with the reading. '+
+              '<a href="#" id="typeLink">type it instead</a> · <a href="#" id="skipLink">skip</a></p>';
+    }
   }else{
+    if(checked){
+      const v = checked.verdict;
+      const label = v === "ok" ? "✓ Correct" : v === "close" ? "≈ Close" : "✗ Not quite";
+      html += '<div class="verdict" data-v="'+v+'"><span class="mark">'+label+'</span>';
+      if(checked.heard){
+        html += '<span class="heard">'+esc(checked.heard)+'</span>';
+      }
+      if(v !== "ok"){
+        html += '<small>expected '+esc(w.kana)+'</small>';
+      }
+      html += '</div>';
+    }
     html += '<div class="answer">';
     html +=   '<div class="reading">'+esc(w.kana)+'</div>';
     html +=   '<div class="meaning">'+esc(w.mean)+'</div>';
     html +=   '<div class="ex"><div class="jp">'+highlight(w.jp, w.k)+'</div><div class="en">'+esc(w.en)+'</div></div>';
     html += '</div>';
+    const sug = suggestedTag();
     html += '<p class="tag-label">How well did that come back?</p>';
     html += '<div class="tags">';
-    html +=   '<button class="tag" data-s="new"><span class="n">NEW</span><span class="d">blank — see it again today</span><span class="kbd">1</span></button>';
-    html +=   '<button class="tag" data-s="soso"><span class="n">SO-SO</span><span class="d">shaky — back in 2 days</span><span class="kbd">2</span></button>';
-    html +=   '<button class="tag" data-s="burnt"><span class="n">BURNT</span><span class="d">solid — back in 7 days</span><span class="kbd">3</span></button>';
+    [["new","blank — see it again today","1"],
+     ["soso","shaky — back in 2 days","2"],
+     ["burnt","solid — back in 7 days","3"]].forEach(function(t){
+      html += '<button class="tag" data-s="'+t[0]+'"'+(sug === t[0] ? ' data-suggested="1"' : '')+'>'+
+              '<span class="n">'+LABEL[t[0]]+'</span><span class="d">'+t[1]+'</span>'+
+              (sug === t[0] ? '<span class="sug">SUGGESTED</span>' : '<span class="kbd">'+t[2]+'</span>')+
+              '</button>';
+    });
     html += '</div>';
   }
+
+  html += '<div class="modebar" role="group" aria-label="How to answer">';
+  [["speak","🎤 Speak"],["type","⌨ Type"],["self","Self-rate"]].forEach(function(m){
+    const off = m[0] === "speak" && !SR;
+    html += '<button data-mode="'+m[0]+'" aria-pressed="'+(mode === m[0])+'"'+
+            (off ? ' disabled title="This browser has no speech recognition — Chrome or Edge does"' : '')+
+            '>'+m[1]+'</button>';
+  });
+  html += '</div>';
 
   stage.innerHTML = html;
 
@@ -1071,12 +1378,81 @@ function render(){
   const pb = $("playBtn");
   if(pb && hasClip) pb.addEventListener("click", playMine);
   const lb = $("listenBtn");
-  if(lb && revealed) lb.addEventListener("click", function(){ speak(w.kana); });
+  if(lb && !modelOff) lb.addEventListener("click", function(){ speak(w.kana); });
   const rb = $("revealBtn");
   if(rb) rb.addEventListener("click", doReveal);
+
+  const ab = $("ansBtn");
+  if(ab) ab.addEventListener("click", function(){
+    if(mode === "type"){
+      submitAnswer([$("ansInput").value], "type");
+    }else{
+      listening ? stopListening() : startListening();
+    }
+  });
+  const ai = $("ansInput");
+  if(ai){
+    ai.value = pendingInput;
+    ai.addEventListener("input", function(){ pendingInput = ai.value; });
+    ai.addEventListener("keydown", function(e){
+      if(e.key === "Enter"){ e.preventDefault(); submitAnswer([ai.value], "type"); }
+    });
+    if(!listening) ai.focus();
+  }
+  const sk = $("skipLink");
+  if(sk) sk.addEventListener("click", function(e){
+    e.preventDefault(); stopListening(); submitAnswer([""], "skip");
+  });
+  const tl = $("typeLink");
+  if(tl) tl.addEventListener("click", function(e){
+    e.preventDefault(); stopListening(); setMode("type");
+  });
+
+  stage.querySelectorAll(".modebar button").forEach(function(b){
+    b.addEventListener("click", function(){ setMode(b.getAttribute("data-mode")); });
+  });
   stage.querySelectorAll(".tag").forEach(function(b){
     b.addEventListener("click", function(){ tag(b.getAttribute("data-s")); });
   });
+}
+
+function answerMode(){
+  const m = S.mode || (SR ? "speak" : "type");
+  return (m === "speak" && !SR) ? "type" : m;
+}
+function setMode(m){
+  stopListening();
+  S.mode = m; save();
+  srError = "";
+  render();
+}
+function suggestedTag(){
+  if(!checked) return null;
+  if(checked.verdict === "bad") return "new";
+  const r = rec(current() && current().id);
+  if(checked.verdict === "close") return "soso";
+  return (r && r.s === "soso") ? "burnt" : "soso";   // correct
+}
+function submitAnswer(candidates, how){
+  const w = current();
+  if(!w || revealed) return;
+  stopListening();
+  srError = "";
+  if(how === "skip"){
+    checked = {verdict:"bad", heard:"", how:"skip"};
+  }else{
+    let best = "bad", heard = candidates[0] || "";
+    for(const c of candidates){
+      const v = judge(c, w);
+      if(v === "ok"){ best = "ok"; heard = c; break; }
+      if(v === "close" && best === "bad"){ best = "close"; heard = c; }
+    }
+    if(!String(heard).trim() && how === "type") return;   // ignore empty submit
+    checked = {verdict:best, heard:String(heard).trim(), how:how};
+  }
+  pendingInput = "";
+  revealed = true;
+  render();
 }
 
 function renderDone(){
@@ -1140,6 +1516,10 @@ function tag(status){
 
 function loadCard(){
   revealed = false;
+  checked = null;
+  pendingInput = "";
+  srError = "";
+  stopListening();
   if(lastURL){ URL.revokeObjectURL(lastURL); lastURL = null; }
   if(prevClip && prevClip.url){ URL.revokeObjectURL(prevClip.url); }
   prevClip = null;
@@ -1500,11 +1880,18 @@ document.addEventListener("keydown", function(e){
   if(e.key === " " || e.key === "Enter"){
     if(!current()) return;
     e.preventDefault();
-    if(!revealed) doReveal();
+    if(revealed) return;
+    const m = answerMode();
+    if(m === "self") doReveal();
+    else if(m === "speak") listening ? stopListening() : startListening();
+    // "type" mode is driven by the focused input, handled there
   }
   else if(k === "r"){ e.preventDefault(); toggleRecord(); }
   else if(k === "p"){ e.preventDefault(); playMine(); }
-  else if(k === "l" && revealed){ const w = current(); if(w) speak(w.kana); }
+  else if(k === "l" && revealed){
+    const w = current();
+    if(w && voiceState !== "none" && voiceState !== "unsupported") speak(w.kana);
+  }
   else if(revealed && (k === "1" || k === "2" || k === "3")){
     e.preventDefault();
     tag({"1":"new","2":"soso","3":"burnt"}[k]);

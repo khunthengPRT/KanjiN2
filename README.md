@@ -111,17 +111,32 @@ yourself.
 
 ## Step 5 — Study
 
-You'll see a kanji in a square. Out loud:
+You'll see a kanji in a square. Give the reading, and the app checks it.
 
-1. **Say the word.** Guess if you don't know it.
-2. **Press `R`** (or tap the red circle) to record yourself saying it. Press `R`
-   again to stop.
-3. **Press `Space`** to reveal the reading, meaning, and an example sentence.
-4. **Press `L`** to hear how it should sound, and **`P`** to hear your own take.
-5. **Press `1`, `2`, or `3`** to say how well you knew it:
+Three ways to answer — pick one with the buttons under the card. Your choice is
+remembered.
+
+| Mode | How it works |
+| --- | --- |
+| 🎤 **Speak** | Tap **Speak the reading** and say it. Your speech is transcribed and compared with the answer. Needs Chrome or Edge; the button is greyed out elsewhere. |
+| ⌨ **Type** | Type the reading and press Enter. Accepts kana *or* romaji — `eikyou` counts as えいきょう, so you don't need a Japanese keyboard. |
+| **Self-rate** | No checking. Reveal the answer and judge yourself, the way flashcards usually work. |
+
+Then:
+
+1. **Answer** by speaking or typing. Stuck? Click **skip** — it counts as a miss.
+2. **See the verdict** — ✓ Correct, ≈ Close (a character or two off), or ✗ Not
+   quite, with the reading you were after.
+3. **Press `L`** to hear the model reading, and **`P`** to hear yourself.
+4. **Press `1`, `2`, or `3`** to set when it comes back. One is marked
+   **SUGGESTED** based on how you did — take it or override it:
    - `1` **NEW** — no idea. Comes back later today and again tomorrow.
    - `2` **SO-SO** — shaky. Comes back in 2 days.
    - `3` **BURNT** — solid. Comes back in 7 days.
+
+You can record yourself at any point with **`R`** (or the red circle), in any
+mode. That's separate from the checking — it saves a clip so you can hear
+yourself over time.
 
 Then the next word appears. Ten new words are introduced per day, on top of
 whatever is due for review.
@@ -152,8 +167,26 @@ anywhere to back it up.
 | `Python 3.8 or newer is required` | Python missing or too old | Install from https://www.python.org/downloads/, then reopen the terminal |
 | Browser says "can't connect" | Server isn't running | Check the terminal is still open and hasn't printed an error |
 | Microphone doesn't work | Permission was denied | Click the padlock icon in the address bar → allow microphone → reload |
+| **Model** button greyed out, shows `—` | No Japanese text-to-speech voice is installed on your computer | Install one (see below), or ignore it — everything else works |
+| 🎤 **Speak** button greyed out | Your browser has no speech recognition | Use Chrome or Edge, or switch to ⌨ **Type** |
+| "Speech recognition needs an internet connection" | Speak mode sends audio to the browser vendor's service | Go online, or switch to ⌨ **Type**, which works offline |
 | `Port 8788 is busy` | Something else is using it | The script picks the next free port automatically; use the URL it prints |
 | Progress vanished | Browser data was cleared | Progress tab → **Pull from server** (works if you'd pushed before) |
+
+### Installing a Japanese voice
+
+The **Model** button plays the reading using a text-to-speech voice supplied by
+your operating system, not by this app. If no Japanese voice is installed there
+is nothing to play, and the button says so by greying out and showing `—`.
+
+- **macOS** — System Settings → Accessibility → Spoken Content → System Voice →
+  Manage Voices → add a Japanese voice (Kyoko)
+- **Windows** — Settings → Time & language → Language & region → add 日本語,
+  then install its Speech pack
+- **Linux** — install a Japanese voice for `speech-dispatcher`, e.g. `espeak-ng`
+
+Reload the page afterwards. Nothing else depends on this — recording, answer
+checking, and scheduling all work without a voice installed.
 
 ### Windows without Git Bash
 
@@ -232,14 +265,29 @@ progress JSON, but it cannot carry audio — use Push for that.
 
 | Key | Action |
 | --- | --- |
-| `Space` | reveal reading and meaning |
+| `Enter` | check a typed answer |
+| `Space` | start/stop listening (Speak mode) · reveal (Self-rate mode) |
 | `1` `2` `3` | tag NEW / SO-SO / BURNT |
 | `R` | start or stop recording |
 | `P` | play your recording back |
-| `L` | hear the model reading (after reveal) |
+| `L` | hear the model reading (after answering) |
 
 Scheduling: **NEW** returns later in the same session and again tomorrow,
 **SO-SO** in 2 days, **BURNT** in 7. Ten new words are introduced per day.
+
+### What counts as correct
+
+An answer is accepted as any spelling of the right reading:
+
+- **kana** — えいきょう, or エイキョウ
+- **the written form** — 影響. Speech recognition usually returns kanji rather
+  than kana, so both are accepted
+- **romaji** — `eikyou`, `joukyou`, `kekkon`. Doubled consonants and long vowels
+  work the way you'd expect
+- spacing and punctuation are ignored
+
+One or two characters off is reported as **≈ Close** rather than wrong, so a
+slip doesn't read the same as not knowing the word.
 
 The three tabs are **Practice** (drilling), **Word bank** (all 167 words,
 searchable and filterable), and **Progress** (streak, memory mix, a 13-week
@@ -278,10 +326,19 @@ without a toolchain.
   days, BURNT +7) rather than a scored algorithm like SM-2. Easy to reason
   about, and easy to tune — the numbers live in one `INTERVAL` object near the
   top of the script.
-- **Recordings are for your ears, not a grader.** Nothing scores your
-  pronunciation. Automatic scoring of second-language speech is unreliable
-  enough that a confident wrong answer would be worse than no feedback, so the
-  app just lets you play back your attempt against the model reading.
+- **Answers are checked by transcription, not pronunciation scoring.** Speak
+  mode runs your voice through the browser's speech recognition and compares
+  the resulting *text* with the reading. It tells you whether you said the
+  right word — not how good your accent is. In practice bad enough
+  pronunciation does fail to transcribe, which is useful feedback, but treat it
+  as a spot check rather than a score. Nothing here grades your pitch accent.
+- **Recordings stay unscored on purpose.** They exist so you can hear yourself
+  against the model reading and over time. Automatic scoring of
+  second-language speech is unreliable enough that a confidently wrong grade
+  would be worse than none.
+- **Typing accepts romaji** so the app is usable without a Japanese keyboard.
+  The converter is a plain lookup table, not a full IME — it handles the
+  digraphs, doubled consonants, and ん, which covers every reading in the deck.
 - **Sync is same-origin only.** The page talks to the server over relative
   URLs, so there is no CORS setup and no host to configure. Served from
   anywhere else, it quietly falls back to browser-only storage.
