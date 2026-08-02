@@ -1,0 +1,1523 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="JLPT N2 vocabulary practice: see the kanji, say it aloud, record yourself, and track each word from NEW to BURNT.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="語彙練習帳">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>%F0%9F%96%8C%EF%B8%8F</text></svg>">
+<title>語彙練習帳 — N2 Vocabulary Practice</title>
+<style>*,*::before,*::after{box-sizing:border-box}body{margin:0}</style>
+</head>
+<body>
+<style>
+/* ── tokens ─────────────────────────────────────────────── */
+:root{
+  --bg:#F2F1EB;
+  --surface:#FBFAF6;
+  --surface-2:#E8E6DC;
+  --ink:#191C24;
+  --ink-2:#4B5162;
+  --ink-3:#7C8398;
+  --line:#D6D3C7;
+  --line-2:#C3BFB0;
+  --grid:#CFCBBC;
+  --accent:#2A4A8C;
+  --accent-ink:#FBFAF6;
+  --accent-soft:rgba(42,74,140,.10);
+  --slate:#5F6A80;
+  --gold:#9C6D12;
+  --ember:#A33C28;
+  --slate-soft:rgba(95,106,128,.13);
+  --gold-soft:rgba(156,109,18,.14);
+  --ember-soft:rgba(163,60,40,.13);
+  --shadow:0 1px 2px rgba(25,28,36,.06), 0 8px 24px -16px rgba(25,28,36,.30);
+
+  --font-jp-serif:"Hiragino Mincho ProN","Yu Mincho",YuMincho,"Noto Serif JP","Songti SC","MS Mincho",serif;
+  --font-jp-sans:"Hiragino Sans","Yu Gothic",YuGothic,"Noto Sans JP",Meiryo,sans-serif;
+  --font-ui:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0D1119; --surface:#151A26; --surface-2:#1E2432;
+    --ink:#E8E5DA; --ink-2:#A9AEBD; --ink-3:#767D90;
+    --line:#28303F; --line-2:#3A4356; --grid:#333C4E;
+    --accent:#8AA8E4; --accent-ink:#0D1119; --accent-soft:rgba(138,168,228,.15);
+    --slate:#96A0B4; --gold:#D9A542; --ember:#E27A62;
+    --slate-soft:rgba(150,160,180,.15); --gold-soft:rgba(217,165,66,.15); --ember-soft:rgba(226,122,98,.15);
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D1119; --surface:#151A26; --surface-2:#1E2432;
+  --ink:#E8E5DA; --ink-2:#A9AEBD; --ink-3:#767D90;
+  --line:#28303F; --line-2:#3A4356; --grid:#333C4E;
+  --accent:#8AA8E4; --accent-ink:#0D1119; --accent-soft:rgba(138,168,228,.15);
+  --slate:#96A0B4; --gold:#D9A542; --ember:#E27A62;
+  --slate-soft:rgba(150,160,180,.15); --gold-soft:rgba(217,165,66,.15); --ember-soft:rgba(226,122,98,.15);
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+}
+:root[data-theme="light"]{
+  --bg:#F2F1EB; --surface:#FBFAF6; --surface-2:#E8E6DC;
+  --ink:#191C24; --ink-2:#4B5162; --ink-3:#7C8398;
+  --line:#D6D3C7; --line-2:#C3BFB0; --grid:#CFCBBC;
+  --accent:#2A4A8C; --accent-ink:#FBFAF6; --accent-soft:rgba(42,74,140,.10);
+  --slate:#5F6A80; --gold:#9C6D12; --ember:#A33C28;
+  --slate-soft:rgba(95,106,128,.13); --gold-soft:rgba(156,109,18,.14); --ember-soft:rgba(163,60,40,.13);
+  --shadow:0 1px 2px rgba(25,28,36,.06), 0 8px 24px -16px rgba(25,28,36,.30);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:var(--font-ui); font-size:16px; line-height:1.55;
+  -webkit-text-size-adjust:100%;
+}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:3px}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+
+/* ── shell ──────────────────────────────────────────────── */
+.wrap{max-width:640px;margin:0 auto;padding:0 18px 96px}
+.wrap.wide{max-width:1000px}
+
+header.masthead{
+  display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;
+  padding:26px 0 14px;border-bottom:1px solid var(--line);
+}
+.brand{font-family:var(--font-jp-serif);font-size:27px;letter-spacing:.06em;line-height:1}
+.brand-sub{
+  font-family:var(--font-mono);font-size:10.5px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--ink-3);
+}
+.masthead .spacer{flex:1 1 auto}
+.iconbtn{
+  width:32px;height:32px;border:1px solid var(--line);border-radius:50%;
+  display:grid;place-items:center;color:var(--ink-2);font-size:14px;
+  transition:border-color .15s,color .15s;
+}
+.iconbtn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ── stat rail ──────────────────────────────────────────── */
+.rail{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--line)}
+.rail div{padding:13px 0 14px;border-right:1px solid var(--line)}
+.rail div:last-child{border-right:none}
+.rail .k{
+  display:block;font-family:var(--font-mono);font-size:9.5px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--ink-3);margin-bottom:3px;
+}
+.rail .v{font-family:var(--font-mono);font-size:22px;font-variant-numeric:tabular-nums;line-height:1.1}
+.rail .v small{font-size:11px;color:var(--ink-3);margin-left:1px}
+
+/* ── tabs ───────────────────────────────────────────────── */
+nav.tabs{display:flex;gap:2px;padding:14px 0 0;border-bottom:1px solid var(--line);margin-bottom:26px}
+nav.tabs button{
+  position:relative;padding:7px 14px 11px;color:var(--ink-3);
+  font-size:13.5px;letter-spacing:.02em;transition:color .15s;
+}
+nav.tabs button .jp{font-family:var(--font-jp-sans);margin-right:6px}
+nav.tabs button:hover{color:var(--ink-2)}
+nav.tabs button[aria-selected="true"]{color:var(--ink);font-weight:600}
+nav.tabs button[aria-selected="true"]::after{
+  content:"";position:absolute;left:8px;right:8px;bottom:-1px;height:2px;
+  background:var(--accent);border-radius:2px 2px 0 0;
+}
+.view[hidden]{display:none}
+
+/* ── practice ───────────────────────────────────────────── */
+.session-line{
+  display:flex;align-items:center;gap:10px;margin-bottom:18px;
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--ink-3);
+}
+.session-line .bar{flex:1 1 auto;height:2px;background:var(--surface-2);border-radius:2px;overflow:hidden}
+.session-line .bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .35s ease}
+
+.stage{display:flex;flex-direction:column;align-items:center;gap:22px}
+
+.glyph-box{
+  position:relative;width:min(64vw,272px);aspect-ratio:1;
+  background:var(--surface);border:1px solid var(--line-2);
+  display:grid;place-items:center;
+  box-shadow:var(--shadow);
+  transition:border-color .18s, box-shadow .18s;
+  --lvl:0;
+}
+.glyph-box::before,.glyph-box::after{content:"";position:absolute;pointer-events:none;opacity:.85}
+.glyph-box::before{left:50%;top:8%;bottom:8%;border-left:1px dashed var(--grid)}
+.glyph-box::after{top:50%;left:8%;right:8%;border-top:1px dashed var(--grid)}
+.glyph-box.rec{
+  border-color:var(--ember);
+  box-shadow:0 0 0 calc(1px + var(--lvl)*9px) var(--ember-soft), var(--shadow);
+}
+.glyph{
+  font-family:var(--font-jp-serif);line-height:1;position:relative;z-index:1;
+  font-size:var(--gsize,110px);letter-spacing:.02em;text-align:center;
+  padding:0 6px;font-weight:500;
+}
+.pos-tag{
+  position:absolute;top:9px;left:11px;z-index:1;
+  font-family:var(--font-mono);font-size:9px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink-3);
+}
+.seen-tag{
+  position:absolute;bottom:9px;right:11px;z-index:1;
+  font-family:var(--font-mono);font-size:9px;letter-spacing:.12em;color:var(--ink-3);
+}
+
+/* prompt / record */
+.prompt{
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--ink-3);text-align:center;margin:-6px 0 0;
+}
+.rec-row{display:flex;align-items:center;gap:14px}
+.rec-btn{
+  width:64px;height:64px;border-radius:50%;
+  border:1.5px solid var(--line-2);background:var(--surface);
+  display:grid;place-items:center;transition:border-color .15s,background .15s,transform .1s;
+  --lvl:0;
+}
+.rec-btn:hover{border-color:var(--ember)}
+.rec-btn:active{transform:scale(.96)}
+.rec-btn i{display:block;width:20px;height:20px;border-radius:50%;background:var(--ember);transition:all .18s}
+.rec-btn.on{border-color:var(--ember);box-shadow:0 0 0 calc(var(--lvl)*14px) var(--ember-soft)}
+.rec-btn.on i{width:16px;height:16px;border-radius:3px}
+.mini{
+  height:38px;padding:0 15px;border:1px solid var(--line);border-radius:19px;
+  color:var(--ink-2);font-size:13px;display:inline-flex;align-items:center;gap:7px;
+  transition:border-color .15s,color .15s,background .15s;white-space:nowrap;
+}
+.mini:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.mini:disabled{opacity:.35;cursor:default}
+.mini .kbd{font-family:var(--font-mono);font-size:9.5px;color:var(--ink-3);letter-spacing:.06em}
+.rec-meta{
+  font-family:var(--font-mono);font-size:10.5px;letter-spacing:.1em;
+  color:var(--ink-3);text-align:center;min-height:15px;
+}
+.rec-meta b{color:var(--ember);font-weight:500}
+
+.reveal-btn{
+  width:100%;max-width:340px;height:46px;border-radius:4px;
+  background:var(--accent);color:var(--accent-ink);font-size:14.5px;font-weight:600;
+  letter-spacing:.03em;display:flex;align-items:center;justify-content:center;gap:10px;
+  transition:filter .15s;
+}
+.reveal-btn:hover{filter:brightness(1.08)}
+.reveal-btn .kbd{font-family:var(--font-mono);font-size:10px;opacity:.65;font-weight:400}
+
+/* answer */
+.answer{
+  width:100%;background:var(--surface);border:1px solid var(--line);
+  border-radius:5px;padding:20px 20px 18px;box-shadow:var(--shadow);
+  display:flex;flex-direction:column;gap:14px;
+}
+.answer .reading{
+  font-family:var(--font-jp-sans);font-size:23px;letter-spacing:.06em;color:var(--accent);line-height:1.3;
+}
+.answer .meaning{font-size:17px;line-height:1.5;text-wrap:balance}
+.answer .ex{border-top:1px solid var(--line);padding-top:14px;display:flex;flex-direction:column;gap:6px}
+.answer .ex .jp{font-family:var(--font-jp-serif);font-size:18px;line-height:1.85}
+.answer .ex .jp mark{background:var(--accent-soft);color:inherit;padding:1px 2px;border-radius:2px}
+.answer .ex .en{font-size:13.5px;color:var(--ink-2);line-height:1.5}
+
+.tag-label{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--ink-3);text-align:center;
+}
+.tags{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%}
+.tag{
+  border:1px solid var(--line);border-radius:4px;padding:11px 6px 10px;
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  transition:border-color .15s,background .15s,transform .1s;
+}
+.tag:active{transform:translateY(1px)}
+.tag .n{font-family:var(--font-mono);font-size:12px;letter-spacing:.14em;font-weight:600}
+.tag .d{font-size:10.5px;color:var(--ink-3);letter-spacing:.02em}
+.tag .kbd{font-family:var(--font-mono);font-size:9px;color:var(--ink-3)}
+.tag[data-s="new"]{color:var(--slate)}   .tag[data-s="new"]:hover{border-color:var(--slate);background:var(--slate-soft)}
+.tag[data-s="soso"]{color:var(--gold)}   .tag[data-s="soso"]:hover{border-color:var(--gold);background:var(--gold-soft)}
+.tag[data-s="burnt"]{color:var(--ember)} .tag[data-s="burnt"]:hover{border-color:var(--ember);background:var(--ember-soft)}
+.tag .d,.tag .kbd{color:var(--ink-3)}
+
+.notice{
+  width:100%;border:1px solid var(--line);border-left:3px solid var(--gold);
+  border-radius:4px;padding:11px 14px;font-size:13px;color:var(--ink-2);
+  background:var(--surface);line-height:1.5;
+}
+.notice b{color:var(--ink);font-weight:600}
+
+.done{
+  text-align:center;padding:52px 10px;display:flex;flex-direction:column;align-items:center;gap:14px;
+}
+.done .big{font-family:var(--font-jp-serif);font-size:44px;line-height:1.1}
+.done p{color:var(--ink-2);font-size:14.5px;margin:0;max-width:34ch;text-wrap:balance}
+
+/* ── pills ──────────────────────────────────────────────── */
+.pill{
+  display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:11px;
+  font-family:var(--font-mono);font-size:9.5px;letter-spacing:.12em;font-weight:600;
+}
+.pill::before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor}
+.pill[data-s="new"]{color:var(--slate);background:var(--slate-soft)}
+.pill[data-s="soso"]{color:var(--gold);background:var(--gold-soft)}
+.pill[data-s="burnt"]{color:var(--ember);background:var(--ember-soft)}
+
+/* ── word bank ──────────────────────────────────────────── */
+.controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+.search{
+  flex:1 1 190px;min-width:0;height:36px;padding:0 12px;
+  border:1px solid var(--line);border-radius:4px;background:var(--surface);
+  color:var(--ink);font:inherit;font-size:14px;
+}
+.search::placeholder{color:var(--ink-3)}
+.chip{
+  height:30px;padding:0 12px;border:1px solid var(--line);border-radius:15px;
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--ink-3);transition:all .15s;
+}
+.chip:hover{color:var(--ink-2);border-color:var(--line-2)}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:5px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:600px}
+th{
+  font-family:var(--font-mono);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--ink-3);text-align:left;font-weight:500;padding:10px 12px;
+  border-bottom:1px solid var(--line);white-space:nowrap;background:var(--surface);
+}
+td{padding:9px 12px;border-bottom:1px solid var(--line);font-size:14px;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--accent-soft)}
+td.w{font-family:var(--font-jp-serif);font-size:18px;white-space:nowrap}
+td.r{font-family:var(--font-jp-sans);font-size:13px;color:var(--ink-2);white-space:nowrap}
+td.m{color:var(--ink-2);font-size:13.5px;min-width:170px}
+td.num{font-family:var(--font-mono);font-size:12px;color:var(--ink-3);text-align:right;white-space:nowrap}
+.playcell button{
+  width:26px;height:26px;border:1px solid var(--line);border-radius:50%;
+  color:var(--accent);font-size:9px;display:grid;place-items:center;
+}
+.playcell button:hover{background:var(--accent-soft)}
+.playcell span{color:var(--ink-3);font-size:11px;font-family:var(--font-mono)}
+.empty{padding:40px 16px;text-align:center;color:var(--ink-3);font-size:14px}
+
+/* ── progress ───────────────────────────────────────────── */
+.section{margin-bottom:34px}
+.section h2{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--ink-3);font-weight:500;margin:0 0 14px;
+  padding-bottom:8px;border-bottom:1px solid var(--line);
+}
+.section h2 span{font-family:var(--font-jp-sans);letter-spacing:.1em;margin-right:8px;color:var(--ink-2)}
+
+.mixbar{display:flex;height:12px;border-radius:2px;overflow:hidden;background:var(--surface-2);margin-bottom:10px}
+.mixbar i{display:block;transition:width .4s ease}
+.mixlegend{display:flex;gap:18px;flex-wrap:wrap;font-family:var(--font-mono);font-size:11px}
+.mixlegend div{display:flex;align-items:center;gap:6px;color:var(--ink-2)}
+.mixlegend em{width:8px;height:8px;border-radius:2px;font-style:normal}
+.mixlegend b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+
+.heat{display:flex;gap:3px;overflow-x:auto;padding-bottom:6px}
+.heatcol{display:flex;flex-direction:column;gap:3px}
+.heatcell{width:13px;height:13px;border-radius:2px;background:var(--surface-2);flex:0 0 auto}
+.heatcell[data-t="0"]{background:var(--surface-2)}
+.heatcell[data-t="1"]{background:color-mix(in srgb,var(--accent) 25%,var(--surface-2))}
+.heatcell[data-t="2"]{background:color-mix(in srgb,var(--accent) 50%,var(--surface-2))}
+.heatcell[data-t="3"]{background:color-mix(in srgb,var(--accent) 75%,var(--surface-2))}
+.heatcell[data-t="4"]{background:var(--accent)}
+.heatfoot{
+  display:flex;justify-content:space-between;align-items:center;margin-top:8px;
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;color:var(--ink-3);
+}
+.heatscale{display:flex;align-items:center;gap:4px}
+
+.log{display:flex;flex-direction:column;gap:1px}
+.logrow{
+  display:grid;grid-template-columns:minmax(96px,auto) 1fr auto;gap:12px;align-items:center;
+  padding:9px 2px;border-bottom:1px solid var(--line);font-size:13.5px;
+}
+.logrow:last-child{border-bottom:none}
+.logrow .d{font-family:var(--font-mono);font-size:12px;color:var(--ink-2)}
+.logrow .s{display:flex;gap:5px;flex-wrap:wrap}
+.logrow .c{font-family:var(--font-mono);font-size:12px;color:var(--ink-3);white-space:nowrap}
+
+.datarow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.danger:hover{border-color:var(--ember);color:var(--ember)}
+.hint{font-size:12.5px;color:var(--ink-3);margin:10px 0 0;line-height:1.55}
+.hint b{color:var(--ink-2);font-weight:600}
+.hint code{
+  font-family:var(--font-mono);font-size:11.5px;background:var(--surface-2);
+  padding:1px 5px;border-radius:3px;color:var(--ink-2);
+}
+
+.syncstate{
+  display:flex;align-items:center;gap:9px;margin-bottom:13px;
+  font-family:var(--font-mono);font-size:11.5px;letter-spacing:.05em;color:var(--ink-2);
+}
+.syncstate::before{
+  content:"";width:7px;height:7px;border-radius:50%;background:var(--line-2);flex:0 0 auto;
+  transition:background .2s,box-shadow .2s;
+}
+.syncstate[data-up="1"]::before{background:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.syncstate[data-up="busy"]::before{background:var(--gold);box-shadow:0 0 0 3px var(--gold-soft)}
+.syncstate[data-up="err"]::before{background:var(--ember);box-shadow:0 0 0 3px var(--ember-soft)}
+.toggle{
+  display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 14px;
+  border:1px solid var(--line);border-radius:19px;font-size:13px;color:var(--ink-2);
+  cursor:pointer;transition:border-color .15s,color .15s;
+}
+.toggle input{accent-color:var(--accent);width:14px;height:14px;cursor:pointer;margin:0}
+.toggle:has(input:checked){border-color:var(--accent);color:var(--accent)}
+
+@media (max-width:520px){
+  .rail{grid-template-columns:repeat(2,1fr)}
+  .rail div:nth-child(2){border-right:none}
+  .rail div:nth-child(-n+2){border-bottom:1px solid var(--line)}
+  .brand{font-size:23px}
+  nav.tabs button{padding:7px 10px 11px;font-size:13px}
+  nav.tabs button .jp{margin-right:4px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition-duration:.01ms !important;animation-duration:.01ms !important}
+}
+</style>
+
+<div class="wrap" id="wrap">
+  <header class="masthead">
+    <div>
+      <div class="brand">語彙練習帳</div>
+      <div class="brand-sub">JLPT N2 · Speak &amp; Record</div>
+    </div>
+    <div class="spacer"></div>
+    <button class="iconbtn" id="themeBtn" title="Toggle light / dark" aria-label="Toggle light or dark theme">◐</button>
+  </header>
+
+  <div class="rail">
+    <div><span class="k">Streak</span><span class="v mono" id="sStreak">0<small>d</small></span></div>
+    <div><span class="k">Today</span><span class="v mono" id="sToday">0</span></div>
+    <div><span class="k">Due now</span><span class="v mono" id="sDue">0</span></div>
+    <div><span class="k">Burnt</span><span class="v mono" id="sBurnt">0<small>/167</small></span></div>
+  </div>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" aria-selected="true" data-view="practice"><span class="jp">練習</span>Practice</button>
+    <button role="tab" aria-selected="false" data-view="bank"><span class="jp">単語</span>Word bank</button>
+    <button role="tab" aria-selected="false" data-view="progress"><span class="jp">記録</span>Progress</button>
+  </nav>
+
+  <!-- ── PRACTICE ── -->
+  <section class="view" id="view-practice">
+    <div class="session-line">
+      <span id="qLeft">—</span>
+      <span class="bar"><i id="qBar"></i></span>
+      <span id="qDone">0 done</span>
+    </div>
+    <div class="stage" id="stage"></div>
+  </section>
+
+  <!-- ── WORD BANK ── -->
+  <section class="view" id="view-bank" hidden>
+    <div class="controls">
+      <input class="search" id="q" type="search" placeholder="Search kanji, kana, or meaning…" aria-label="Search words">
+      <button class="chip" data-f="all" aria-pressed="true">All</button>
+      <button class="chip" data-f="new" aria-pressed="false">New</button>
+      <button class="chip" data-f="soso" aria-pressed="false">So-so</button>
+      <button class="chip" data-f="burnt" aria-pressed="false">Burnt</button>
+      <button class="chip" data-f="rec" aria-pressed="false">Recorded</button>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr>
+          <th>Word</th><th>Reading</th><th>Meaning</th><th>Status</th>
+          <th style="text-align:right">Reps</th><th style="text-align:right">Next</th><th>Voice</th>
+        </tr></thead>
+        <tbody id="bankBody"></tbody>
+      </table>
+      <div class="empty" id="bankEmpty" hidden>No words match that filter.</div>
+    </div>
+    <p class="hint" id="bankCount"></p>
+  </section>
+
+  <!-- ── PROGRESS ── -->
+  <section class="view" id="view-progress" hidden>
+    <div class="section">
+      <h2><span>記憶</span>Memory mix</h2>
+      <div class="mixbar">
+        <i id="mixBurnt" style="background:var(--ember)"></i>
+        <i id="mixSoso" style="background:var(--gold)"></i>
+        <i id="mixNew" style="background:var(--slate)"></i>
+      </div>
+      <div class="mixlegend">
+        <div><em style="background:var(--ember)"></em>Burnt <b id="legBurnt">0</b></div>
+        <div><em style="background:var(--gold)"></em>So-so <b id="legSoso">0</b></div>
+        <div><em style="background:var(--slate)"></em>New <b id="legNew">0</b></div>
+        <div><em style="background:var(--surface-2)"></em>Untouched <b id="legUntouched">0</b></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2><span>毎日</span>Daily activity · last 13 weeks</h2>
+      <div class="heat" id="heat"></div>
+      <div class="heatfoot">
+        <span id="heatSum">—</span>
+        <span class="heatscale">LESS
+          <i class="heatcell" data-t="0"></i><i class="heatcell" data-t="1"></i>
+          <i class="heatcell" data-t="2"></i><i class="heatcell" data-t="3"></i>
+          <i class="heatcell" data-t="4"></i> MORE
+        </span>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2><span>日誌</span>Session log</h2>
+      <div class="log" id="log"></div>
+    </div>
+
+    <div class="section">
+      <h2><span>同期</span>Local server</h2>
+      <div class="syncstate" id="syncState" data-up="0">Looking for a local server…</div>
+      <div class="datarow">
+        <button class="mini" id="pushBtn" disabled>↑ Push to server</button>
+        <button class="mini" id="pullBtn" disabled>↓ Pull from server</button>
+        <label class="toggle"><input type="checkbox" id="autoSync"> Auto-push as I study</label>
+      </div>
+      <p class="hint" id="syncHint"></p>
+    </div>
+
+    <div class="section">
+      <h2><span>控え</span>Backup</h2>
+      <div class="datarow">
+        <button class="mini" id="expBtn">↓ Export progress (.json)</button>
+        <button class="mini" id="impBtn">↑ Import</button>
+        <button class="mini danger" id="resetBtn">Reset all progress</button>
+        <input type="file" id="impFile" accept="application/json" hidden>
+      </div>
+      <p class="hint">Progress and daily logs live in this browser's storage; voice clips live in IndexedDB. Export writes a JSON file with your statuses, schedule, and day log — <b>audio clips are not included</b>, they're too large to travel in a text file. To keep the recordings too, use <b>Push to server</b> above.</p>
+    </div>
+  </section>
+</div>
+
+<script>
+"use strict";
+
+/* ── data: 168 N2 words ─────────────────────────────────────
+   [kanji, kana, meaning, pos, example JP, example EN]        */
+const RAW = [
+["影響","えいきょう","influence; effect","noun","台風の影響で、電車が止まっている。","Trains are stopped because of the typhoon."],
+["環境","かんきょう","environment; surroundings","noun","新しい職場の環境にはもう慣れました。","I've already gotten used to my new workplace."],
+["経験","けいけん","experience","noun","この仕事には三年以上の経験が必要だ。","This job requires more than three years of experience."],
+["現象","げんしょう","phenomenon","noun","これは冬にだけ見られる珍しい現象です。","This is a rare phenomenon seen only in winter."],
+["効果","こうか","effect; effectiveness","noun","この薬は思ったより効果があった。","This medicine worked better than I expected."],
+["目的","もくてき","purpose; objective","noun","今回の旅行の目的は何ですか。","What is the purpose of this trip?"],
+["手段","しゅだん","means; method","noun","彼は目的のためなら手段を選ばない。","He'll use any means to reach his goal."],
+["結論","けつろん","conclusion","noun","会議は結論が出ないまま終わった。","The meeting ended without reaching a conclusion."],
+["状況","じょうきょう","situation; circumstances","noun","現地の状況はまだよく分かっていない。","The situation on the ground is still unclear."],
+["条件","じょうけん","condition; terms","noun","その条件なら引き受けてもいい。","I'd take it on under those conditions."],
+["制度","せいど","system; institution","noun","会社の休暇制度が四月から変わる。","The company's leave system changes in April."],
+["責任","せきにん","responsibility","noun","失敗の責任は私にあります。","The responsibility for the failure is mine."],
+["相談","そうだん","consultation; asking advice","noun","進路について先生に相談した。","I consulted my teacher about my career path."],
+["態度","たいど","attitude; manner","noun","彼の態度は最後まで変わらなかった。","His attitude didn't change until the very end."],
+["判断","はんだん","judgment; decision","noun","その場で判断するのは難しい。","It's hard to make a judgment on the spot."],
+["表現","ひょうげん","expression; wording","noun","この表現は少し古いですね。","This expression is a little dated."],
+["分野","ぶんや","field; area of study","noun","彼女はこの分野の第一人者だ。","She is the leading authority in this field."],
+["方針","ほうしん","policy; course of action","noun","会社の方針が急に変わった。","The company's policy changed suddenly."],
+["命令","めいれい","order; command","noun","上司の命令には逆らえない。","You can't defy your boss's orders."],
+["予想","よそう","expectation; forecast","noun","結果は予想どおりだった。","The result was exactly as expected."],
+["理由","りゆう","reason","noun","遅れた理由を説明してください。","Please explain the reason you were late."],
+["利益","りえき","profit; benefit","noun","今年は利益が大きく伸びた。","Profits grew significantly this year."],
+["記録","きろく","record","noun","彼は世界記録を更新した。","He broke the world record."],
+["機会","きかい","opportunity; chance","noun","またお会いする機会があるといいですね。","I hope we get the chance to meet again."],
+["給料","きゅうりょう","salary; pay","noun","来月から給料が上がるらしい。","Apparently salaries go up from next month."],
+["苦労","くろう","hardship; trouble","noun","親の苦労が今になって分かる。","Only now do I understand my parents' hardships."],
+["傾向","けいこう","tendency; trend","noun","若者の読書量は減る傾向にある。","The amount young people read is trending downward."],
+["検査","けんさ","inspection; examination","noun","年に一度、健康検査を受けている。","I get a health check once a year."],
+["交流","こうりゅう","exchange; interaction","noun","地域の人々との交流が増えた。","Interaction with local residents has increased."],
+["産業","さんぎょう","industry","noun","この町は観光産業で成り立っている。","This town runs on the tourism industry."],
+["資源","しげん","resources","noun","日本は資源が乏しい国だ。","Japan is a country poor in resources."],
+["実験","じっけん","experiment","noun","実験の結果をまとめて発表した。","I compiled and presented the results of the experiment."],
+["需要","じゅよう","demand","noun","夏はエアコンの需要が高まる。","Demand for air conditioners rises in summer."],
+["順番","じゅんばん","order; one's turn","noun","順番にお名前を呼びます。","I'll call your names in order."],
+["証拠","しょうこ","evidence; proof","noun","証拠がなければ何も言えない。","Without evidence I can't say anything."],
+["常識","じょうしき","common sense","noun","そんなことは常識でしょう。","That's just common sense, isn't it?"],
+["出版","しゅっぱん","publication","noun","彼の小説が来月出版される。","His novel will be published next month."],
+["想像","そうぞう","imagination","noun","想像していたより広い部屋だった。","The room was bigger than I had imagined."],
+["対象","たいしょう","target; subject (of a study)","noun","この調査は高校生を対象にしている。","This survey targets high school students."],
+["提案","ていあん","proposal; suggestion","noun","彼の提案は全員に受け入れられた。","His proposal was accepted by everyone."],
+["展開","てんかい","development; unfolding","noun","物語は予想外の展開を見せた。","The story took an unexpected turn."],
+["統計","とうけい","statistics","noun","統計によると人口は減っている。","According to the statistics, the population is declining."],
+["特徴","とくちょう","characteristic; distinguishing feature","noun","この犬種の特徴を教えてください。","Please tell me the characteristics of this breed."],
+["内容","ないよう","content; substance","noun","話の内容がよく分からなかった。","I didn't really follow the content of the talk."],
+["燃料","ねんりょう","fuel","noun","燃料が切れる前に給油しよう。","Let's refuel before we run out of fuel."],
+["発達","はったつ","development; growth","noun","交通機関の発達で生活が便利になった。","Life became convenient with the development of transport."],
+["範囲","はんい","range; scope","noun","今回の試験の範囲はここまでです。","This exam covers up to here."],
+["批判","ひはん","criticism","noun","その政策は強い批判を受けた。","That policy came under strong criticism."],
+["秘密","ひみつ","secret","noun","この話は二人だけの秘密にしよう。","Let's keep this a secret between the two of us."],
+["物価","ぶっか","prices of goods; cost of living","noun","都会は物価が高い。","Prices are high in the city."],
+["平均","へいきん","average","noun","クラスの平均点は七十点だった。","The class average was seventy points."],
+["変化","へんか","change","noun","気温の変化が激しい季節だ。","It's a season of sharp temperature changes."],
+["保存","ほぞん","preservation; saving","noun","データを保存してから閉じてください。","Please save the data before closing."],
+["満足","まんぞく","satisfaction; being content","noun","今の生活に満足している。","I'm satisfied with my current life."],
+["矛盾","むじゅん","contradiction","noun","彼の話には矛盾が多い。","There are many contradictions in his story."],
+["迷惑","めいわく","trouble; nuisance","noun","ご迷惑をおかけして申し訳ありません。","I'm sorry for the trouble I've caused you."],
+["役割","やくわり","role; part to play","noun","チームでの自分の役割を理解する。","Understand your own role on the team."],
+["余裕","よゆう","room; leeway; composure","noun","今は時間に余裕がない。","I have no time to spare right now."],
+["論文","ろんぶん","thesis; academic paper","noun","卒業論文をやっと書き上げた。","I finally finished writing my graduation thesis."],
+["割合","わりあい","ratio; proportion","noun","女性社員の割合が増えている。","The proportion of female employees is increasing."],
+["意識","いしき","consciousness; awareness","noun","彼は事故で意識を失った。","He lost consciousness in the accident."],
+["印象","いんしょう","impression","noun","第一印象はとても大切だ。","First impressions matter a great deal."],
+["応用","おうよう","application (of knowledge)","noun","基礎を学んでから応用に進む。","Learn the basics, then move on to application."],
+["課題","かだい","task; issue; assignment","noun","コスト削減が今後の課題だ。","Cutting costs is the issue going forward."],
+["価値","かち","value; worth","noun","この本は読む価値がある。","This book is worth reading."],
+["我慢","がまん","patience; putting up with","noun","もう少しの我慢だ。","Just hang on a little longer."],
+["感覚","かんかく","sense; sensation","noun","寒くて指の感覚がない。","It's so cold I've lost the feeling in my fingers."],
+["期待","きたい","expectation; hope","noun","皆の期待に応えたい。","I want to live up to everyone's expectations."],
+["基準","きじゅん","standard; criterion","noun","採用の基準を見直すことにした。","We decided to review our hiring criteria."],
+["規則","きそく","rule; regulation","noun","学校の規則を守りなさい。","Obey the school rules."],
+["議論","ぎろん","discussion; argument","noun","長い議論の末にやっと決まった。","It was finally decided after a long discussion."],
+["現実","げんじつ","reality","noun","理想と現実は違う。","Ideals and reality are different things."],
+["交換","こうかん","exchange; swap","noun","電池を新しいものと交換した。","I swapped the battery for a new one."],
+["構造","こうぞう","structure","noun","この建物の構造は複雑だ。","The structure of this building is complex."],
+["行動","こうどう","action; behavior","noun","言葉より行動で示したい。","I want to show it through action rather than words."],
+["個人","こじん","individual; private person","noun","個人の意見として言わせてください。","Let me say this as a personal opinion."],
+["差別","さべつ","discrimination","noun","差別のない社会を目指す。","We aim for a society without discrimination."],
+["姿勢","しせい","posture; stance; attitude","noun","問題に取り組む姿勢が大切だ。","Your stance toward tackling problems is what matters."],
+["実現","じつげん","realization; making real","noun","夢を実現するために努力している。","I'm working hard to make my dream a reality."],
+["与える","あたえる","to give; to grant","verb","彼の言葉は私に勇気を与えた。","His words gave me courage."],
+["扱う","あつかう","to handle; to deal in","verb","この店は輸入品を扱っている。","This shop deals in imported goods."],
+["現れる","あらわれる","to appear; to show up","verb","待っていた人がやっと現れた。","The person I was waiting for finally appeared."],
+["諦める","あきらめる","to give up","verb","最後まで諦めないでほしい。","I want you not to give up until the end."],
+["生じる","しょうじる","to arise; to occur","verb","工事で騒音の問題が生じた。","Noise problems arose from the construction work."],
+["抑える","おさえる","to suppress; to hold back","verb","怒りを抑えるのに苦労した。","I struggled to hold back my anger."],
+["及ぼす","およぼす","to exert; to cause (an effect)","verb","円安は経済に影響を及ぼす。","A weak yen has an effect on the economy."],
+["通う","かよう","to commute; to attend regularly","verb","週に三回ジムに通っている。","I go to the gym three times a week."],
+["稼ぐ","かせぐ","to earn (money)","verb","学費を自分で稼いでいる。","I earn my own tuition."],
+["重なる","かさなる","to overlap; to pile up","verb","用事が重なって行けなかった。","Errands piled up so I couldn't go."],
+["支える","ささえる","to support; to prop up","verb","家族がずっと私を支えてくれた。","My family supported me the whole way."],
+["従う","したがう","to follow; to obey","verb","指示に従って行動してください。","Please act in accordance with the instructions."],
+["占める","しめる","to occupy; to account for","verb","輸出が売上の半分を占める。","Exports account for half of sales."],
+["責める","せめる","to blame; to reproach","verb","自分ばかり責めないでください。","Please don't blame only yourself."],
+["属する","ぞくする","to belong to","verb","彼はどのチームに属していますか。","Which team does he belong to?"],
+["溜まる","たまる","to accumulate; to build up","verb","仕事が溜まって帰れない。","Work has piled up so I can't go home."],
+["保つ","たもつ","to keep; to maintain","verb","室温を一定に保つ必要がある。","We need to keep the room temperature constant."],
+["縮む","ちぢむ","to shrink","verb","洗ったらセーターが縮んだ。","The sweater shrank after washing."],
+["就く","つく","to take up (a post); to get a job","verb","来月から新しい職に就く。","I start a new job next month."],
+["努める","つとめる","to strive; to make an effort","verb","品質の向上に努めています。","We strive to improve quality."],
+["伝わる","つたわる","to be conveyed; to spread","verb","気持ちがちゃんと伝わった。","My feelings got across properly."],
+["詰める","つめる","to pack; to stuff; to shorten","verb","弁当箱におかずを詰める。","I pack the side dishes into the lunch box."],
+["整える","ととのえる","to put in order; to arrange","verb","出発の準備を整えた。","I got everything ready for departure."],
+["溶ける","とける","to melt; to dissolve","verb","砂糖はお湯によく溶ける。","Sugar dissolves easily in hot water."],
+["悩む","なやむ","to be troubled; to agonize","verb","進路のことでずっと悩んでいる。","I've been agonizing over my career path."],
+["逃す","のがす","to miss; to let slip","verb","せっかくの機会を逃してしまった。","I let a precious opportunity slip away."],
+["述べる","のべる","to state; to express","verb","意見を自由に述べてください。","Please state your opinion freely."],
+["省く","はぶく","to omit; to cut out","verb","無駄な手間を省きたい。","I want to cut out unnecessary work."],
+["果たす","はたす","to fulfill; to accomplish","verb","彼はきちんと約束を果たした。","He properly fulfilled his promise."],
+["引き受ける","ひきうける","to undertake; to take on","verb","その仕事は私が引き受けます。","I'll take on that job."],
+["含む","ふくむ","to include; to contain","verb","料金には税金が含まれている。","Tax is included in the price."],
+["防ぐ","ふせぐ","to prevent; to protect against","verb","手洗いで感染を防ぐ。","Prevent infection by washing your hands."],
+["振る舞う","ふるまう","to behave; to conduct oneself","verb","彼女は最後まで落ち着いて振る舞った。","She behaved calmly to the very end."],
+["巻き込む","まきこむ","to involve; to drag in","verb","友人をトラブルに巻き込んでしまった。","I dragged my friend into trouble."],
+["認める","みとめる","to recognize; to admit","verb","彼はやっと自分の間違いを認めた。","He finally admitted his mistake."],
+["恵まれる","めぐまれる","to be blessed with","verb","今日は天気に恵まれた。","We were blessed with good weather today."],
+["求める","もとめる","to seek; to request","verb","上司に説明を求めた。","I asked my boss for an explanation."],
+["譲る","ゆずる","to hand over; to give way","verb","電車でお年寄りに席を譲った。","I gave up my seat to an elderly person on the train."],
+["破る","やぶる","to tear; to break (a promise)","verb","彼はまた約束を破った。","He broke his promise again."],
+["寄る","よる","to drop by; to stop in","verb","帰りにスーパーに寄る。","I'll stop by the supermarket on the way home."],
+["訴える","うったえる","to appeal; to complain of; to sue","verb","彼は頭痛を訴えている。","He is complaining of a headache."],
+["抱える","かかえる","to hold; to be burdened with","verb","彼は大きな問題を抱えている。","He is burdened with a serious problem."],
+["見直す","みなおす","to review; to think better of","verb","計画をもう一度見直そう。","Let's review the plan once more."],
+["取り組む","とりくむ","to tackle; to work on","verb","環境問題に真剣に取り組む。","To tackle environmental problems seriously."],
+["溢れる","あふれる","to overflow; to be full of","verb","駅前は人で溢れていた。","The area in front of the station was overflowing with people."],
+["鋭い","するどい","sharp; keen","i-adj","彼女は鋭い質問をした。","She asked a sharp question."],
+["賢い","かしこい","clever; wise","i-adj","それは賢いやり方だと思う。","I think that's a clever approach."],
+["相応しい","ふさわしい","suitable; befitting","i-adj","この場に相応しい服装をする。","Dress appropriately for the occasion."],
+["激しい","はげしい","violent; intense","i-adj","昨夜は激しい雨が降った。","It rained heavily last night."],
+["詳しい","くわしい","detailed; well-informed","i-adj","彼はパソコンに詳しい。","He's knowledgeable about computers."],
+["蒸し暑い","むしあつい","hot and humid","i-adj","東京の夏は本当に蒸し暑い。","Tokyo summers are truly hot and humid."],
+["恐ろしい","おそろしい","frightening; terrible","i-adj","ゆうべ恐ろしい夢を見た。","I had a terrifying dream last night."],
+["貧しい","まずしい","poor; needy","i-adj","彼は貧しい家庭に育った。","He grew up in a poor household."],
+["険しい","けわしい","steep; stern (expression)","i-adj","険しい山道を三時間登った。","We climbed a steep mountain path for three hours."],
+["幼い","おさない","very young; childish","i-adj","幼い頃の記憶はほとんどない。","I have almost no memories of early childhood."],
+["濃い","こい","thick; strong (taste or color)","i-adj","このスープは少し味が濃いですね。","This soup is a bit strongly flavored."],
+["図々しい","ずうずうしい","shameless; brazen","i-adj","図々しいお願いですみません。","Sorry for the brazen request."],
+["情けない","なさけない","pathetic; shameful","i-adj","こんな点数を取って情けない。","Getting a score like this is pathetic."],
+["目覚ましい","めざましい","remarkable; striking","i-adj","彼の成長は目覚ましい。","His growth has been remarkable."],
+["乏しい","とぼしい","scarce; lacking","i-adj","経験が乏しくて不安だ。","I'm anxious because I lack experience."],
+["曖昧","あいまい","vague; ambiguous","na-adj","曖昧な返事しかもらえなかった。","I only got a vague reply."],
+["明らか","あきらか","clear; obvious","na-adj","事故の原因は明らかだ。","The cause of the accident is obvious."],
+["意外","いがい","unexpected; surprising","na-adj","意外な結果に驚いた。","I was surprised by the unexpected result."],
+["穏やか","おだやか","calm; gentle","na-adj","今日は穏やかな天気だ。","It's calm weather today."],
+["主要","しゅよう","main; principal","na-adj","主要な駅にはエレベーターがある。","Major stations have elevators."],
+["慎重","しんちょう","cautious; careful","na-adj","もっと慎重に判断したほうがいい。","You'd better judge more cautiously."],
+["素直","すなお","honest; frank; obedient","na-adj","素直に謝ったほうがいい。","You should apologize honestly."],
+["贅沢","ぜいたく","luxurious; extravagant","na-adj","たまには贅沢な食事もいい。","An extravagant meal now and then is nice."],
+["適切","てきせつ","appropriate; proper","na-adj","適切な言葉が見つからない。","I can't find the appropriate words."],
+["派手","はで","flashy; showy","na-adj","彼女は派手な服が好きだ。","She likes flashy clothes."],
+["微妙","びみょう","subtle; delicate; iffy","na-adj","二つの味は微妙に違う。","The two flavors are subtly different."],
+["豊富","ほうふ","abundant; plentiful","na-adj","この地域は水が豊富だ。","This region has abundant water."],
+["冷静","れいせい","calm; cool-headed","na-adj","どうか冷静に対応してください。","Please respond calmly."],
+["面倒","めんどう","troublesome; a bother","na-adj","手続きが面倒で後回しにした。","The procedure was a hassle so I put it off."],
+["あらゆる","あらゆる","every; all kinds of","adv","あらゆる方法を試してみた。","I tried every possible method."],
+["いちいち","いちいち","one by one; every single time","adv","いちいち文句を言わないで。","Don't complain about every little thing."],
+["いきなり","いきなり","suddenly; without warning","adv","いきなり名前を呼ばれて驚いた。","I was startled to be called on suddenly."],
+["一応","いちおう","more or less; just in case","adv","一応確認しておきます。","I'll check, just to be sure."],
+["今更","いまさら","now (when it's too late)","adv","今更謝っても遅い。","It's too late to apologize now."],
+["案外","あんがい","unexpectedly; contrary to expectation","adv","試験は案外簡単だった。","The exam was unexpectedly easy."],
+["相変わらず","あいかわらず","as usual; as always","adv","相変わらず忙しそうですね。","You look busy as always."],
+["却って","かえって","on the contrary; rather","adv","薬を飲んだら却って悪くなった。","Taking the medicine made it worse instead."],
+["せっかく","せっかく","taking the trouble to; specially","adv","せっかく来たのに休みだった。","I came all this way and it was closed."],
+["相当","そうとう","considerably; fairly","adv","彼は相当疲れているようだ。","He seems considerably tired."],
+["直ちに","ただちに","immediately; at once","adv","直ちに避難してください。","Please evacuate immediately."],
+["とっくに","とっくに","long ago; already","adv","その話はとっくに知っている。","I've known about that for ages."],
+["めったに","めったに","rarely (with a negative)","adv","彼はめったに怒らない。","He rarely gets angry."],
+["さすが","さすが","as expected; indeed","adv","さすがプロは違うね。","A pro really is different, isn't it."]
+];
+
+const WORDS = RAW.map(function(r,i){
+  return {id:r[0], k:r[0], kana:r[1], mean:r[2], pos:r[3], jp:r[4], en:r[5], i:i};
+});
+const BY_ID = {};
+WORDS.forEach(function(w){ BY_ID[w.id]=w; });
+const TOTAL = WORDS.length;
+
+/* ── storage ────────────────────────────────────────────── */
+const KEY = "n2goi.v1";
+const INTERVAL = {"new":0, "soso":2, "burnt":7};
+const LABEL = {"new":"NEW","soso":"SO-SO","burnt":"BURNT"};
+
+let S = load();
+
+function blank(){ return {v:1, p:{}, days:{}, newPerDay:10, theme:null, autoSync:false}; }
+function load(){
+  try{
+    const raw = localStorage.getItem(KEY);
+    if(!raw) return blank();
+    const o = JSON.parse(raw);
+    return Object.assign(blank(), o);
+  }catch(e){ return blank(); }
+}
+let saveTimer = null;
+function save(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(function(){
+    try{ localStorage.setItem(KEY, JSON.stringify(S)); }
+    catch(e){ console.warn("Could not save progress:", e); }
+  }, 120);
+}
+
+function todayKey(d){
+  const t = d || new Date();
+  return t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0");
+}
+function addDays(key, n){
+  const p = key.split("-").map(Number);
+  const d = new Date(p[0], p[1]-1, p[2]);
+  d.setDate(d.getDate()+n);
+  return todayKey(d);
+}
+function daysBetween(a,b){
+  const pa=a.split("-").map(Number), pb=b.split("-").map(Number);
+  const da=Date.UTC(pa[0],pa[1]-1,pa[2]), db=Date.UTC(pb[0],pb[1]-1,pb[2]);
+  return Math.round((db-da)/86400000);
+}
+const TODAY = todayKey();
+
+/* ── audio clip store (IndexedDB) ───────────────────────── */
+const DB_NAME="n2goi-audio", STORE="clips";
+let dbp = null;
+function db(){
+  if(dbp) return dbp;
+  dbp = new Promise(function(res,rej){
+    if(!self.indexedDB){ rej(new Error("no idb")); return; }
+    const rq = indexedDB.open(DB_NAME,1);
+    rq.onupgradeneeded = function(){ rq.result.createObjectStore(STORE); };
+    rq.onsuccess = function(){ res(rq.result); };
+    rq.onerror = function(){ rej(rq.error); };
+  });
+  return dbp;
+}
+function clipPut(id, blob, date){
+  return db().then(function(d){
+    return new Promise(function(res,rej){
+      const tx = d.transaction(STORE,"readwrite");
+      tx.objectStore(STORE).put({blob:blob, date:date || TODAY}, id);
+      tx.oncomplete = res; tx.onerror = function(){ rej(tx.error); };
+    });
+  });
+}
+function clipGet(id){
+  return db().then(function(d){
+    return new Promise(function(res,rej){
+      const tx = d.transaction(STORE,"readonly");
+      const rq = tx.objectStore(STORE).get(id);
+      rq.onsuccess = function(){ res(rq.result || null); };
+      rq.onerror = function(){ rej(rq.error); };
+    });
+  }).catch(function(){ return null; });
+}
+function clipClear(){
+  return db().then(function(d){
+    return new Promise(function(res){
+      const tx = d.transaction(STORE,"readwrite");
+      tx.objectStore(STORE).clear();
+      tx.oncomplete = res; tx.onerror = res;
+    });
+  }).catch(function(){});
+}
+
+/* ── progress helpers ───────────────────────────────────── */
+function rec(id){ return S.p[id] || null; }
+function statusOf(id){ const r = rec(id); return r ? r.s : null; }
+function isDue(id){
+  const r = rec(id);
+  if(!r) return false;
+  return daysBetween(r.due, TODAY) >= 0;
+}
+function dayRow(key){
+  if(!S.days[key]) S.days[key] = {n:0, "new":0, soso:0, burnt:0, rec:0};
+  return S.days[key];
+}
+function counts(){
+  const c = {"new":0, soso:0, burnt:0, untouched:0, due:0, rec:0};
+  WORDS.forEach(function(w){
+    const r = rec(w.id);
+    if(!r){ c.untouched++; return; }
+    c[r.s]++;
+    if(r.rec) c.rec++;
+    if(isDue(w.id)) c.due++;
+  });
+  return c;
+}
+function streak(){
+  let n = 0, k = TODAY;
+  if(!(S.days[k] && S.days[k].n > 0)) k = addDays(TODAY,-1);
+  while(S.days[k] && S.days[k].n > 0){ n++; k = addDays(k,-1); }
+  return n;
+}
+
+/* ── session queue ──────────────────────────────────────── */
+let queue = [], doneCount = 0, sessionTotal = 0;
+
+function buildQueue(){
+  const due = WORDS.filter(function(w){ return rec(w.id) && isDue(w.id); })
+    .sort(function(a,b){
+      const ra=rec(a.id), rb=rec(b.id);
+      const d = daysBetween(rb.due,TODAY) - daysBetween(ra.due,TODAY);
+      return d !== 0 ? d : a.i - b.i;
+    });
+  const introducedToday = Object.keys(S.p).filter(function(id){
+    return S.p[id].first === TODAY;
+  }).length;
+  const room = Math.max(0, (S.newPerDay||10) - introducedToday);
+  const fresh = WORDS.filter(function(w){ return !rec(w.id); }).slice(0, room);
+  queue = due.concat(fresh).map(function(w){ return w.id; });
+  sessionTotal = queue.length;
+  doneCount = 0;
+}
+
+/* ── DOM refs ───────────────────────────────────────────── */
+const $ = function(id){ return document.getElementById(id); };
+const stage = $("stage"), wrap = $("wrap");
+
+/* ── theme ──────────────────────────────────────────────── */
+(function initTheme(){
+  if(S.theme) document.documentElement.setAttribute("data-theme", S.theme);
+  $("themeBtn").addEventListener("click", function(){
+    const cur = document.documentElement.getAttribute("data-theme");
+    const sysDark = matchMedia("(prefers-color-scheme: dark)").matches;
+    const now = cur ? cur : (sysDark ? "dark" : "light");
+    const next = now === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    S.theme = next; save();
+  });
+})();
+
+/* ── recording ──────────────────────────────────────────── */
+let mediaStream=null, recorder=null, chunks=[], recTimer=null, rafId=null;
+let recording=false, micDenied=false, micMsg="";
+let lastURL=null, prevClip=null;
+const MAX_MS = 12000;
+
+function stopMeter(){
+  if(rafId) cancelAnimationFrame(rafId);
+  rafId = null;
+  const box = document.querySelector(".glyph-box");
+  const btn = document.querySelector(".rec-btn");
+  if(box) box.style.setProperty("--lvl", 0);
+  if(btn) btn.style.setProperty("--lvl", 0);
+}
+
+function startMeter(stream){
+  let ctx;
+  try{ ctx = new (window.AudioContext || window.webkitAudioContext)(); }
+  catch(e){ return; }
+  const src = ctx.createMediaStreamSource(stream);
+  const an = ctx.createAnalyser();
+  an.fftSize = 512;
+  src.connect(an);
+  const buf = new Uint8Array(an.frequencyBinCount);
+  const box = document.querySelector(".glyph-box");
+  const btn = document.querySelector(".rec-btn");
+  let smooth = 0;
+  (function tick(){
+    an.getByteTimeDomainData(buf);
+    let peak = 0;
+    for(let i=0;i<buf.length;i++){
+      const v = Math.abs(buf[i]-128)/128;
+      if(v>peak) peak = v;
+    }
+    smooth = smooth*0.72 + Math.min(1, peak*2.4)*0.28;
+    if(box) box.style.setProperty("--lvl", smooth.toFixed(3));
+    if(btn) btn.style.setProperty("--lvl", smooth.toFixed(3));
+    rafId = requestAnimationFrame(tick);
+  })();
+  recorder.addEventListener("stop", function(){ ctx.close().catch(function(){}); }, {once:true});
+}
+
+function toggleRecord(){
+  if(recording){ stopRecord(); return; }
+  micDenied = false; // always let a blocked mic be retried
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder === "undefined"){
+    micDenied = true;
+    micMsg = "This browser doesn't expose microphone recording to the page.";
+    render(); return;
+  }
+  navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){
+    mediaStream = stream;
+    chunks = [];
+    recorder = new MediaRecorder(stream);
+    recorder.ondataavailable = function(e){ if(e.data && e.data.size) chunks.push(e.data); };
+    recorder.onstop = function(){
+      const blob = new Blob(chunks, {type: recorder.mimeType || "audio/webm"});
+      stream.getTracks().forEach(function(t){ t.stop(); });
+      mediaStream = null;
+      if(blob.size > 0) saveClip(blob);
+      else render();
+    };
+    recorder.start();
+    recording = true;
+    render();
+    startMeter(stream);
+    recTimer = setTimeout(stopRecord, MAX_MS);
+  }).catch(function(err){
+    micDenied = true;
+    micMsg = err && err.name === "NotAllowedError"
+      ? "Microphone access was blocked for this page."
+      : "Couldn't reach a microphone (" + ((err && err.name) || "unknown") + ").";
+    recording = false;
+    render();
+  });
+}
+
+function stopRecord(){
+  clearTimeout(recTimer);
+  stopMeter();
+  recording = false;
+  render();
+  if(recorder && recorder.state !== "inactive"){ try{ recorder.stop(); }catch(e){} }
+}
+
+function saveClip(blob){
+  const w = current();
+  if(!w){ return; }
+  if(lastURL){ URL.revokeObjectURL(lastURL); }
+  lastURL = URL.createObjectURL(blob);
+  const r = S.p[w.id] || (S.p[w.id] = {s:"new", n:0, first:TODAY, due:TODAY, last:null, rec:false});
+  const firstToday = r.recDate !== TODAY;
+  r.rec = true; r.recDate = TODAY;
+  if(firstToday) dayRow(TODAY).rec++;
+  save();
+  render();
+  refreshRail();
+  clipPut(w.id, blob).then(function(){
+    queueAutoPush();
+  }).catch(function(e){
+    console.warn("Could not store clip:", e);
+  });
+}
+
+/* ── speech synthesis ───────────────────────────────────── */
+let jaVoice = null;
+function pickVoice(){
+  if(!window.speechSynthesis) return;
+  const vs = speechSynthesis.getVoices() || [];
+  jaVoice = vs.filter(function(v){ return /^ja/i.test(v.lang); })[0] || null;
+}
+if(window.speechSynthesis){
+  pickVoice();
+  speechSynthesis.onvoiceschanged = pickVoice;
+}
+function speak(text){
+  if(!window.speechSynthesis) return;
+  try{
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "ja-JP"; u.rate = 0.85;
+    if(jaVoice) u.voice = jaVoice;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+
+/* ── practice render ────────────────────────────────────── */
+let revealed = false;
+
+function current(){ return queue.length ? BY_ID[queue[0]] : null; }
+
+function glyphSize(s){
+  const n = s.length;
+  if(n <= 1) return "clamp(84px, 34vw, 138px)";
+  if(n === 2) return "clamp(70px, 27vw, 112px)";
+  if(n === 3) return "clamp(52px, 20vw, 84px)";
+  if(n === 4) return "clamp(42px, 16vw, 66px)";
+  if(n === 5) return "clamp(34px, 13vw, 54px)";
+  return "clamp(28px, 11vw, 45px)";
+}
+function esc(s){
+  return String(s).replace(/[&<>"]/g, function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c];
+  });
+}
+// Words appear conjugated in their examples (与える → 与えた), so match the
+// longest dictionary-form prefix, then run forward through the okurigana
+// tail to cover the whole inflected form.
+const HIRA = /[ぁ-ゟ]/;
+function highlight(sentence, word){
+  let len = word.length, idx = -1;
+  for(; len >= 1; len--){
+    idx = sentence.indexOf(word.slice(0, len));
+    if(idx >= 0) break;
+  }
+  if(idx < 0) return esc(sentence);
+  let end = idx + len;
+  if(len < word.length){
+    while(end < sentence.length && HIRA.test(sentence.charAt(end))) end++;
+  }
+  return esc(sentence.slice(0, idx)) + "<mark>" + esc(sentence.slice(idx, end)) +
+         "</mark>" + esc(sentence.slice(end));
+}
+function dueLabel(id){
+  const r = rec(id);
+  if(!r) return "new word";
+  const d = daysBetween(TODAY, r.due);
+  if(d < 0) return Math.abs(d) + "d overdue";
+  if(d === 0) return "due today";
+  return "in " + d + "d";
+}
+
+function render(){
+  const w = current();
+  document.querySelectorAll(".session-line span")[0].textContent =
+    queue.length ? queue.length + " in queue" : "queue clear";
+  $("qDone").textContent = doneCount + " done";
+  $("qBar").style.width = sessionTotal ? Math.round(doneCount/sessionTotal*100)+"%" : "100%";
+
+  if(!w){ renderDone(); return; }
+
+  const r = rec(w.id);
+  const seen = r ? (r.n + " rep" + (r.n===1?"":"s")) : "first look";
+  const hasClip = !!lastURL || !!prevClip;
+
+  let html = "";
+  html += '<div class="glyph-box'+(recording?" rec":"")+'">';
+  html +=   '<span class="pos-tag">'+esc(w.pos)+'</span>';
+  html +=   '<span class="seen-tag">'+esc(seen)+' · '+esc(dueLabel(w.id))+'</span>';
+  html +=   '<div class="glyph" style="--gsize:'+glyphSize(w.k)+'">'+esc(w.k)+'</div>';
+  html += '</div>';
+
+  if(!revealed){
+    html += '<p class="prompt">Say it out loud, then record</p>';
+  }else{
+    html += '<p class="prompt">Compare yours with the model reading</p>';
+  }
+
+  html += '<div class="rec-row">';
+  html +=   '<button class="mini" id="listenBtn"'+(revealed?"":" disabled")+' title="'+(revealed?"Hear the model reading":"Reveal first")+'">▶ Model <span class="kbd">L</span></button>';
+  html +=   '<button class="rec-btn'+(recording?" on":"")+'" id="recBtn" aria-label="'+(recording?"Stop recording":"Start recording")+'"><i></i></button>';
+  html +=   '<button class="mini" id="playBtn"'+(hasClip?"":" disabled")+'>▶ Mine <span class="kbd">P</span></button>';
+  html += '</div>';
+
+  let meta = "";
+  if(recording) meta = "<b>● recording</b> — tap to stop";
+  else if(lastURL) meta = "saved for " + esc(w.k) + " · today";
+  else if(prevClip) meta = "last take " + esc(prevClip.date);
+  else meta = "press R or tap the circle";
+  html += '<p class="rec-meta">'+meta+'</p>';
+
+  if(micDenied){
+    html += '<div class="notice"><b>Recording unavailable.</b> '+esc(micMsg)+
+            ' Open this page in its own browser tab and allow the mic, or keep going without it — saying the word aloud still counts, and the tagging and scheduling below work exactly the same.</div>';
+  }
+
+  if(!revealed){
+    html += '<button class="reveal-btn" id="revealBtn">Reveal reading &amp; meaning <span class="kbd">SPACE</span></button>';
+  }else{
+    html += '<div class="answer">';
+    html +=   '<div class="reading">'+esc(w.kana)+'</div>';
+    html +=   '<div class="meaning">'+esc(w.mean)+'</div>';
+    html +=   '<div class="ex"><div class="jp">'+highlight(w.jp, w.k)+'</div><div class="en">'+esc(w.en)+'</div></div>';
+    html += '</div>';
+    html += '<p class="tag-label">How well did that come back?</p>';
+    html += '<div class="tags">';
+    html +=   '<button class="tag" data-s="new"><span class="n">NEW</span><span class="d">blank — see it again today</span><span class="kbd">1</span></button>';
+    html +=   '<button class="tag" data-s="soso"><span class="n">SO-SO</span><span class="d">shaky — back in 2 days</span><span class="kbd">2</span></button>';
+    html +=   '<button class="tag" data-s="burnt"><span class="n">BURNT</span><span class="d">solid — back in 7 days</span><span class="kbd">3</span></button>';
+    html += '</div>';
+  }
+
+  stage.innerHTML = html;
+
+  $("recBtn").addEventListener("click", toggleRecord);
+  const pb = $("playBtn");
+  if(pb && hasClip) pb.addEventListener("click", playMine);
+  const lb = $("listenBtn");
+  if(lb && revealed) lb.addEventListener("click", function(){ speak(w.kana); });
+  const rb = $("revealBtn");
+  if(rb) rb.addEventListener("click", doReveal);
+  stage.querySelectorAll(".tag").forEach(function(b){
+    b.addEventListener("click", function(){ tag(b.getAttribute("data-s")); });
+  });
+}
+
+function renderDone(){
+  const c = counts();
+  const d = S.days[TODAY] || {n:0, rec:0};
+  stage.innerHTML =
+    '<div class="done">'+
+      '<div class="big">お疲れさま</div>'+
+      '<p>Queue clear. You reviewed <b>'+d.n+'</b> word'+(d.n===1?"":"s")+' today and recorded <b>'+d.rec+'</b> of them.</p>'+
+      '<p class="mono" style="font-size:12px;letter-spacing:.1em;color:var(--ink-3)">'+
+        c.burnt+' BURNT · '+c.soso+' SO-SO · '+c["new"]+' NEW · '+c.untouched+' UNTOUCHED</p>'+
+      '<button class="mini" id="againBtn">Drill anyway — 10 random words</button>'+
+    '</div>';
+  $("againBtn").addEventListener("click", function(){
+    const pool = WORDS.slice().sort(function(){ return Math.random()-0.5; }).slice(0,10);
+    queue = pool.map(function(w){ return w.id; });
+    sessionTotal = queue.length; doneCount = 0;
+    loadCard();
+  });
+}
+
+function playMine(){
+  const src = lastURL || (prevClip ? prevClip.url : null);
+  if(!src) return;
+  const a = new Audio(src);
+  a.play().catch(function(){});
+}
+
+function doReveal(){
+  if(!current()) return;
+  revealed = true;
+  render();
+}
+
+function tag(status){
+  const w = current();
+  if(!w || !revealed) return;
+  const r = S.p[w.id] || (S.p[w.id] = {s:"new", n:0, first:TODAY, due:TODAY, last:null, rec:false});
+  r.s = status;
+  r.n = (r.n||0) + 1;
+  r.last = TODAY;
+  r.due = addDays(TODAY, INTERVAL[status]);
+  if(!r.first) r.first = TODAY;
+
+  const day = dayRow(TODAY);
+  day.n++; day[status]++;
+  save();
+
+  queue.shift();
+  doneCount++;
+  // A word tagged NEW comes back later in this same session.
+  if(status === "new" && queue.length){
+    const at = Math.min(queue.length, 5);
+    queue.splice(at, 0, w.id);
+    sessionTotal++;
+  }
+  loadCard();
+  refreshRail();
+  queueAutoPush();
+}
+
+function loadCard(){
+  revealed = false;
+  if(lastURL){ URL.revokeObjectURL(lastURL); lastURL = null; }
+  if(prevClip && prevClip.url){ URL.revokeObjectURL(prevClip.url); }
+  prevClip = null;
+  render();
+  const w = current();
+  if(!w) return;
+  clipGet(w.id).then(function(c){
+    if(!c || current() !== w) return;
+    prevClip = {url: URL.createObjectURL(c.blob), date: c.date};
+    render();
+  });
+}
+
+/* ── rail ───────────────────────────────────────────────── */
+function refreshRail(){
+  const c = counts();
+  const d = S.days[TODAY] || {n:0};
+  $("sStreak").innerHTML = streak()+'<small>d</small>';
+  $("sToday").textContent = d.n;
+  $("sDue").textContent = c.due;
+  $("sBurnt").innerHTML = c.burnt+'<small>/'+TOTAL+'</small>';
+}
+
+/* ── word bank ──────────────────────────────────────────── */
+let filter = "all", query = "";
+
+function renderBank(){
+  const q = query.trim().toLowerCase();
+  const rows = WORDS.filter(function(w){
+    const r = rec(w.id);
+    if(filter === "rec"){ if(!(r && r.rec)) return false; }
+    else if(filter !== "all"){ if(!r || r.s !== filter) return false; }
+    if(!q) return true;
+    return (w.k+w.kana+w.mean+w.pos).toLowerCase().indexOf(q) >= 0;
+  });
+
+  $("bankEmpty").hidden = rows.length > 0;
+  $("bankCount").textContent = rows.length + " of " + TOTAL + " words shown.";
+
+  $("bankBody").innerHTML = rows.map(function(w){
+    const r = rec(w.id);
+    const st = r ? '<span class="pill" data-s="'+r.s+'">'+LABEL[r.s]+'</span>'
+                 : '<span class="mono" style="font-size:11px;color:var(--ink-3)">—</span>';
+    const next = r ? esc(dueLabel(w.id)) : "—";
+    const voice = (r && r.rec)
+      ? '<button data-play="'+esc(w.id)+'" title="Play your recording" aria-label="Play your recording of '+esc(w.k)+'">▶</button>'
+      : '<span>—</span>';
+    return '<tr>'+
+      '<td class="w">'+esc(w.k)+'</td>'+
+      '<td class="r">'+esc(w.kana)+'</td>'+
+      '<td class="m">'+esc(w.mean)+'</td>'+
+      '<td>'+st+'</td>'+
+      '<td class="num">'+(r ? r.n : 0)+'</td>'+
+      '<td class="num">'+next+'</td>'+
+      '<td class="playcell">'+voice+'</td>'+
+    '</tr>';
+  }).join("");
+
+  $("bankBody").querySelectorAll("[data-play]").forEach(function(b){
+    b.addEventListener("click", function(){
+      clipGet(b.getAttribute("data-play")).then(function(c){
+        if(!c) return;
+        const url = URL.createObjectURL(c.blob);
+        const a = new Audio(url);
+        a.addEventListener("ended", function(){ URL.revokeObjectURL(url); });
+        a.play().catch(function(){});
+      });
+    });
+  });
+}
+
+$("q").addEventListener("input", function(e){ query = e.target.value; renderBank(); });
+document.querySelectorAll(".chip").forEach(function(c){
+  c.addEventListener("click", function(){
+    filter = c.getAttribute("data-f");
+    document.querySelectorAll(".chip").forEach(function(o){
+      o.setAttribute("aria-pressed", String(o === c));
+    });
+    renderBank();
+  });
+});
+
+/* ── progress ───────────────────────────────────────────── */
+function renderProgress(){
+  const c = counts();
+  const known = c.burnt + c.soso + c["new"];
+  const denom = TOTAL || 1;
+  $("mixBurnt").style.width = (c.burnt/denom*100)+"%";
+  $("mixSoso").style.width  = (c.soso/denom*100)+"%";
+  $("mixNew").style.width   = (c["new"]/denom*100)+"%";
+  $("legBurnt").textContent = c.burnt;
+  $("legSoso").textContent  = c.soso;
+  $("legNew").textContent   = c["new"];
+  $("legUntouched").textContent = c.untouched;
+
+  // heatmap: 13 weeks, columns = weeks, rows = Sun..Sat
+  const heat = $("heat");
+  const end = new Date();
+  end.setDate(end.getDate() + (6 - end.getDay())); // to Saturday of this week
+  const cells = [];
+  let total = 0, active = 0;
+  for(let i = 90; i >= 0; i--){
+    const d = new Date(end);
+    d.setDate(d.getDate() - i);
+    cells.push({key: todayKey(d), date: d});
+  }
+  const maxN = Math.max(1, Math.max.apply(null, cells.map(function(x){
+    const r = S.days[x.key]; return r ? r.n : 0;
+  })));
+  let html = "", col = "";
+  cells.forEach(function(x, i){
+    const r = S.days[x.key];
+    const n = r ? r.n : 0;
+    if(n > 0){ total += n; active++; }
+    const t = n === 0 ? 0 : Math.min(4, Math.ceil(n / maxN * 4));
+    const future = x.key > TODAY;
+    col += '<i class="heatcell" data-t="'+(future?0:t)+'" style="'+(future?"opacity:.35":"")+
+           '" title="'+x.key+' · '+n+' reviewed"></i>';
+    if((i+1) % 7 === 0){ html += '<div class="heatcol">'+col+'</div>'; col = ""; }
+  });
+  if(col) html += '<div class="heatcol">'+col+'</div>';
+  heat.innerHTML = html;
+  $("heatSum").textContent = total + " reviews across " + active + " active day" + (active===1?"":"s");
+
+  // session log — most recent 20 days with activity
+  const keys = Object.keys(S.days).filter(function(k){ return S.days[k].n > 0; }).sort().reverse().slice(0,20);
+  $("log").innerHTML = keys.length ? keys.map(function(k){
+    const r = S.days[k];
+    const pills = ["burnt","soso","new"].filter(function(s){ return r[s] > 0; })
+      .map(function(s){ return '<span class="pill" data-s="'+s+'">'+r[s]+' '+LABEL[s]+'</span>'; }).join("");
+    return '<div class="logrow"><span class="d mono">'+k+(k===TODAY?" ·今日":"")+'</span>'+
+           '<span class="s">'+pills+'</span>'+
+           '<span class="c mono">'+r.n+' rev · '+r.rec+' rec</span></div>';
+  }).join("") : '<div class="empty">No sessions logged yet. Tag your first word on the Practice tab.</div>';
+}
+
+/* ── local server sync ──────────────────────────────────────
+   Talks to a same-origin companion server (server.py) over
+   relative URLs, so there is no CORS and no host to configure.
+   When the page isn't served by that server — the published
+   artifact, or a file:// copy — every probe simply fails and
+   the panel stays in its offline state.                      */
+const API = "./api";
+let serverUp = false, syncBusy = false, autoPushTimer = null;
+
+function apiFetch(path, opts){
+  const o = Object.assign({cache:"no-store"}, opts || {});
+  return fetch(API + path, o).then(function(r){
+    if(!r.ok) throw new Error("HTTP " + r.status);
+    return r;
+  });
+}
+
+function setSync(state, text, hint){
+  const el = $("syncState");
+  el.setAttribute("data-up", state);
+  el.textContent = text;
+  if(hint !== undefined) $("syncHint").innerHTML = hint;
+  const off = !serverUp || syncBusy;
+  $("pushBtn").disabled = off;
+  $("pullBtn").disabled = off;
+}
+
+const OFFLINE_HINT =
+  'This page isn\'t being served by the companion server, so it\'s running purely on browser storage. ' +
+  'Run <code>python3 server.py</code> from the exported folder and open <code>http://localhost:8788</code> — ' +
+  'the same app, but progress and voice clips persist to disk, and the microphone works because ' +
+  '<code>localhost</code> counts as a secure origin.';
+
+function probeServer(){
+  // Opened straight off disk: there is no origin to fetch from, so don't try.
+  if(location.protocol === "file:"){
+    serverUp = false;
+    setSync("0", "Opened as a local file", OFFLINE_HINT);
+    return Promise.resolve(false);
+  }
+  return apiFetch("/health")
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      serverUp = true;
+      const saved = j.saved ? "last write " + j.saved : "no data yet";
+      setSync("1", "Connected · " + j.clips + " clip" + (j.clips===1?"":"s") + " on disk · " + saved,
+        'Push writes your progress and any new voice clips to <code>' + esc(j.dir || "./data") +
+        '</code>. Pull replaces what\'s in this browser with what\'s on disk.');
+      return true;
+    })
+    .catch(function(){
+      serverUp = false;
+      setSync("0", "No local server", OFFLINE_HINT);
+      return false;
+    });
+}
+
+function pushAll(){
+  if(!serverUp || syncBusy) return Promise.resolve();
+  syncBusy = true;
+  setSync("busy", "Pushing…");
+  let sent = 0;
+  return apiFetch("/progress", {
+      method:"PUT",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify(S)
+    })
+    .then(function(){ return apiFetch("/clips").then(function(r){ return r.json(); }); })
+    .then(function(manifest){
+      const todo = WORDS.filter(function(w){
+        const r = rec(w.id);
+        if(!r || !r.rec) return false;
+        const remote = manifest[w.id];
+        return !remote || remote < (r.recDate || "");
+      });
+      return todo.reduce(function(chain, w){
+        return chain.then(function(){
+          return clipGet(w.id).then(function(c){
+            if(!c || !c.blob) return;
+            return apiFetch("/clips/" + encodeURIComponent(w.id) + "?date=" + encodeURIComponent(c.date || TODAY),
+              {method:"PUT", body:c.blob}).then(function(){ sent++; });
+          });
+        });
+      }, Promise.resolve());
+    })
+    .then(function(){
+      syncBusy = false;
+      return probeServer().then(function(){
+        setSync("1", "Pushed · " + sent + " new clip" + (sent===1?"":"s") + " uploaded");
+      });
+    })
+    .catch(function(e){
+      syncBusy = false; serverUp = false;
+      setSync("err", "Push failed — " + e.message, OFFLINE_HINT);
+    });
+}
+
+function pullAll(){
+  if(!serverUp || syncBusy) return Promise.resolve();
+  syncBusy = true;
+  setSync("busy", "Pulling…");
+  let got = 0;
+  return apiFetch("/progress")
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      if(j && j.p){ S = Object.assign(blank(), j); save(); }
+      return apiFetch("/clips").then(function(r){ return r.json(); });
+    })
+    .then(function(manifest){
+      const ids = Object.keys(manifest);
+      return ids.reduce(function(chain, id){
+        return chain.then(function(){
+          return clipGet(id).then(function(local){
+            if(local && local.date >= manifest[id]) return;
+            return apiFetch("/clips/" + encodeURIComponent(id))
+              .then(function(r){ return r.blob(); })
+              .then(function(b){ return clipPut(id, b, manifest[id]); })
+              .then(function(){ got++; })
+              .catch(function(){});
+          });
+        });
+      }, Promise.resolve());
+    })
+    .then(function(){
+      syncBusy = false;
+      buildQueue(); loadCard(); refreshRail(); renderBank(); renderProgress();
+      $("autoSync").checked = !!S.autoSync;
+      return probeServer().then(function(){
+        setSync("1", "Pulled · " + got + " clip" + (got===1?"":"s") + " restored");
+      });
+    })
+    .catch(function(e){
+      syncBusy = false; serverUp = false;
+      setSync("err", "Pull failed — " + e.message, OFFLINE_HINT);
+    });
+}
+
+// Coalesce the rapid-fire writes of a study session into one push.
+function queueAutoPush(){
+  if(!serverUp || !S.autoSync) return;
+  clearTimeout(autoPushTimer);
+  autoPushTimer = setTimeout(function(){
+    if(!syncBusy) pushAll();
+  }, 3000);
+}
+
+$("pushBtn").addEventListener("click", function(){ pushAll(); });
+$("pullBtn").addEventListener("click", function(){ pullAll(); });
+$("autoSync").addEventListener("change", function(e){
+  S.autoSync = e.target.checked;
+  save();
+  if(S.autoSync) queueAutoPush();
+});
+
+/* ── backup ─────────────────────────────────────────────── */
+$("expBtn").addEventListener("click", function(){
+  const blob = new Blob([JSON.stringify(S,null,2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "n2-goi-progress-" + TODAY + ".json";
+  a.click();
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+});
+$("impBtn").addEventListener("click", function(){ $("impFile").click(); });
+$("impFile").addEventListener("change", function(e){
+  const f = e.target.files && e.target.files[0];
+  if(!f) return;
+  f.text().then(function(t){
+    try{
+      const o = JSON.parse(t);
+      if(!o || typeof o !== "object" || !o.p) throw new Error("bad shape");
+      S = Object.assign(blank(), o);
+      save();
+      buildQueue(); loadCard(); refreshRail(); renderBank(); renderProgress();
+      $("impBtn").textContent = "✓ Imported";
+      setTimeout(function(){ $("impBtn").textContent = "↑ Import"; }, 2000);
+    }catch(err){
+      $("impBtn").textContent = "That file isn't a progress export";
+      setTimeout(function(){ $("impBtn").textContent = "↑ Import"; }, 2600);
+    }
+  });
+  e.target.value = "";
+});
+$("resetBtn").addEventListener("click", function(){
+  const b = $("resetBtn");
+  if(b.dataset.armed !== "1"){
+    b.dataset.armed = "1";
+    b.textContent = "Tap again to erase everything";
+    setTimeout(function(){ b.dataset.armed = "0"; b.textContent = "Reset all progress"; }, 4000);
+    return;
+  }
+  S = blank();
+  try{ localStorage.removeItem(KEY); }catch(e){}
+  clipClear();
+  b.dataset.armed = "0"; b.textContent = "Reset all progress";
+  buildQueue(); loadCard(); refreshRail(); renderBank(); renderProgress();
+});
+
+/* ── tabs ───────────────────────────────────────────────── */
+let view = "practice";
+document.querySelectorAll("nav.tabs button").forEach(function(b){
+  b.addEventListener("click", function(){
+    view = b.getAttribute("data-view");
+    document.querySelectorAll("nav.tabs button").forEach(function(o){
+      o.setAttribute("aria-selected", String(o === b));
+    });
+    ["practice","bank","progress"].forEach(function(v){
+      $("view-"+v).hidden = (v !== view);
+    });
+    wrap.classList.toggle("wide", view === "bank");
+    if(view === "bank") renderBank();
+    if(view === "progress") renderProgress();
+  });
+});
+
+/* ── keyboard ───────────────────────────────────────────── */
+document.addEventListener("keydown", function(e){
+  if(view !== "practice") return;
+  const t = e.target;
+  if(t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA")) return;
+  const k = e.key.toLowerCase();
+  if(e.key === " " || e.key === "Enter"){
+    if(!current()) return;
+    e.preventDefault();
+    if(!revealed) doReveal();
+  }
+  else if(k === "r"){ e.preventDefault(); toggleRecord(); }
+  else if(k === "p"){ e.preventDefault(); playMine(); }
+  else if(k === "l" && revealed){ const w = current(); if(w) speak(w.kana); }
+  else if(revealed && (k === "1" || k === "2" || k === "3")){
+    e.preventDefault();
+    tag({"1":"new","2":"soso","3":"burnt"}[k]);
+  }
+});
+
+/* ── boot ───────────────────────────────────────────────── */
+buildQueue();
+loadCard();
+refreshRail();
+$("autoSync").checked = !!S.autoSync;
+probeServer();
+</script>
+
+</body>
+</html>
