@@ -53,12 +53,6 @@ git clone https://github.com/khunthengPRT/KanjiN2.git
 
 That creates a `KanjiN2` folder on your Desktop.
 
-> **Heads up:** at the time of writing this app lives on a branch, not on `main`.
-> If `vocab-trainer` isn't in the folder after cloning, run
-> `git checkout claude/n2-vocab-tracker-voice-rarz7c` from inside it. Once
-> [PR #1](https://github.com/khunthengPRT/KanjiN2/pull/1) is merged, plain
-> `git clone` is enough.
-
 ## Step 2 — Open a terminal in that folder
 
 A terminal is a window where you type commands instead of clicking.
@@ -264,15 +258,22 @@ trust.
 
 Word IDs are percent-encoded Japanese, e.g. `/api/clips/%E5%BD%B1%E9%9F%BF` for 影響.
 
-## Relationship to the Laravel app
+## Design notes
 
-This is a standalone prototype, not part of the Laravel application in this
-repo. It needs no database, no PHP, and no build step, so it is a place to try
-scheduling rules and the record-and-compare flow before committing them to
-`DailySetService`, `ProgressTrackerService`, and `VoiceRecorder.vue`.
+Everything is deliberately plain: one HTML file, one Python file, no database,
+no framework, no build step. That keeps it runnable years from now and editable
+without a toolchain.
 
-Notable differences from the planned app: the word list is inlined in
-`index.html` rather than seeded from `kanji.json`, review state is keyed to
-NEW/SO-SO/BURNT with fixed 0/2/7-day intervals rather than a mastery streak, and
-recordings are stored as audio for you to compare by ear — there is no
-`AnswerCheckerService` equivalent scoring them.
+- **The word list is inlined in `index.html`** rather than loaded from a data
+  file, so the app still works if you open it with no server at all.
+- **Review state is a three-way tag** on fixed intervals (NEW today, SO-SO +2
+  days, BURNT +7) rather than a scored algorithm like SM-2. Easy to reason
+  about, and easy to tune — the numbers live in one `INTERVAL` object near the
+  top of the script.
+- **Recordings are for your ears, not a grader.** Nothing scores your
+  pronunciation. Automatic scoring of second-language speech is unreliable
+  enough that a confident wrong answer would be worse than no feedback, so the
+  app just lets you play back your attempt against the model reading.
+- **Sync is same-origin only.** The page talks to the server over relative
+  URLs, so there is no CORS setup and no host to configure. Served from
+  anywhere else, it quietly falls back to browser-only storage.
