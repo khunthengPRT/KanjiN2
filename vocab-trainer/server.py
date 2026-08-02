@@ -222,6 +222,8 @@ def main():
     ap.add_argument("--host", default="127.0.0.1",
                     help="bind address (default 127.0.0.1; use 0.0.0.0 for LAN access)")
     ap.add_argument("--port", type=int, default=8788, help="port (default 8788)")
+    ap.add_argument("--quiet", action="store_true",
+                    help="skip the banner (SETUP.sh prints its own)")
     args = ap.parse_args()
 
     ensure_dirs()
@@ -229,13 +231,15 @@ def main():
         sys.exit("index.html is not next to server.py — keep the exported files together.")
 
     httpd = ThreadingHTTPServer((args.host, args.port), Handler)
-    url = "http://%s:%d" % ("localhost" if args.host == "127.0.0.1" else args.host, args.port)
-    print("語彙練習帳 — N2 vocabulary practice")
-    print("  open    %s" % url)
-    print("  data    %s" % DATA)
-    if args.host != "127.0.0.1":
-        print("  note    bound to %s with no authentication — trusted networks only." % args.host)
-    print("  stop    Ctrl-C\n")
+    if not args.quiet:
+        # 0.0.0.0 is a bind address, not something you can type into a browser.
+        print("語彙練習帳 — N2 vocabulary practice")
+        print("  open    http://localhost:%d" % args.port)
+        print("  data    %s" % DATA)
+        if args.host != "127.0.0.1":
+            print("  note    also reachable from this machine's network address;")
+            print("          bound to %s with no authentication — trusted networks only." % args.host)
+        print("  stop    Ctrl-C\n")
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
