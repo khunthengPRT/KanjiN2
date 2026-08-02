@@ -118,7 +118,7 @@ remembered.
 
 | Mode | How it works |
 | --- | --- |
-| 🎤 **Speak** | Tap **Speak the reading** and say it. Your speech is transcribed and compared with the answer. Needs Chrome or Edge; the button is greyed out elsewhere. |
+| 🎤 **Speak** | Tap **Speak the reading** and say it. Your speech is transcribed and compared with the answer. Needs Chrome or Edge; the button is greyed out elsewhere. Works offline once you download the Japanese model — see below. |
 | ⌨ **Type** | Type the reading and press Enter. Accepts kana *or* romaji — `eikyou` counts as えいきょう, so you don't need a Japanese keyboard. |
 | **Self-rate** | No checking. Reveal the answer and judge yourself, the way flashcards usually work. |
 
@@ -169,9 +169,29 @@ anywhere to back it up.
 | Microphone doesn't work | Permission was denied | Click the padlock icon in the address bar → allow microphone → reload |
 | **Model** button greyed out, shows `—` | No Japanese text-to-speech voice is installed on your computer | Install one (see below), or ignore it — everything else works |
 | 🎤 **Speak** button greyed out | Your browser has no speech recognition | Use Chrome or Edge, or switch to ⌨ **Type** |
-| "Speech recognition needs an internet connection" | Speak mode sends audio to the browser vendor's service | Go online, or switch to ⌨ **Type**, which works offline |
+| "No connection. Download the Japanese speech model below…" | Speak mode is using the browser's online service | Click **⬇ Download Japanese speech model** under the Speak button — after that it runs offline. Or use ⌨ **Type**, which never needs internet |
 | `Port 8788 is busy` | Something else is using it | The script picks the next free port automatically; use the URL it prints |
 | Progress vanished | Browser data was cleared | Progress tab → **Pull from server** (works if you'd pushed before) |
+
+### Voice typing without internet
+
+By default, Speak mode streams your audio to your browser vendor's servers, so
+it stops working the moment you go offline. There is nothing to cache around
+this — every attempt is new audio, so there is no previous answer to reuse.
+
+The real fix is to move the recognition onto your machine. Chrome 138+ can
+download a Japanese speech model once and run it locally:
+
+1. Switch to 🎤 **Speak** mode
+2. Click **⬇ Download Japanese speech model** underneath
+3. Wait — it is a one-time download and can take a few minutes
+
+After that the line reads **✓ Offline recognition ready**, and voice typing
+works with no connection at all. Your audio also stops leaving the computer,
+which is the nicer side effect.
+
+If your browser can't do this, the app says so and points you at ⌨ **Type**,
+which has never needed a connection.
 
 ### Installing a Japanese voice
 
@@ -326,6 +346,10 @@ without a toolchain.
   days, BURNT +7) rather than a scored algorithm like SM-2. Easy to reason
   about, and easy to tune — the numbers live in one `INTERVAL` object near the
   top of the script.
+- **Recognition runs locally when it can.** If the browser reports a Japanese
+  model as installed, the recogniser is switched to `processLocally`, so audio
+  never leaves the machine and no connection is needed. Otherwise it falls back
+  to the browser's online service, and the app says which one is in use.
 - **Answers are checked by transcription, not pronunciation scoring.** Speak
   mode runs your voice through the browser's speech recognition and compares
   the resulting *text* with the reading. It tells you whether you said the

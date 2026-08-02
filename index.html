@@ -290,6 +290,16 @@ nav.tabs button[aria-selected="true"]::after{
 .tag[data-suggested="1"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
 .tag .sug{font-family:var(--font-mono);font-size:8px;letter-spacing:.12em;color:var(--accent)}
 
+.offline{
+  display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;
+  font-size:11.5px;color:var(--ink-3);text-align:center;margin:0;
+  max-width:460px;line-height:1.5;
+}
+.offline.ok{color:var(--accent)}
+.offline.busy{color:var(--gold)}
+.offline .mini{height:32px;font-size:12px;flex:0 0 auto}
+.offline span{flex:1 1 200px;text-align:left}
+
 .notice{
   width:100%;border:1px solid var(--line);border-left:3px solid var(--gold);
   border-radius:4px;padding:11px 14px;font-size:13px;color:var(--ink-2);
@@ -1160,6 +1170,44 @@ function judge(input, w){
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 let recog = null, listening = false, srError = "";
 
+/* On-device recognition.
+   By default the browser streams your audio to its vendor's servers, which
+   is why voice typing dies without internet. Chrome 138+ can instead run a
+   downloaded language pack locally: one download, then it works offline and
+   the audio never leaves the machine. There is nothing to cache here — every
+   utterance is new audio — so downloading the model is the real fix.
+   States: unsupported | unavailable | downloadable | downloading | available */
+let onDevice = "unknown";
+const canOnDevice = !!(SR && typeof SR.available === "function" && typeof SR.install === "function");
+
+function checkOnDevice(){
+  if(!canOnDevice){ onDevice = "unsupported"; return Promise.resolve(); }
+  return SR.available({langs:["ja-JP"], processLocally:true})
+    .then(function(state){
+      onDevice = String(state || "unavailable");
+      if(view === "practice") render();
+    })
+    .catch(function(){ onDevice = "unsupported"; });
+}
+
+function installOnDevice(){
+  if(!canOnDevice || onDevice === "downloading") return;
+  onDevice = "downloading";
+  srError = "";
+  render();
+  SR.install({langs:["ja-JP"], processLocally:true})
+    .then(function(){ return checkOnDevice(); })
+    .then(function(){
+      // install() can resolve before the pack is usable; re-check once.
+      if(onDevice === "downloading") return checkOnDevice();
+    })
+    .catch(function(){
+      onDevice = "downloadable";
+      srError = "The download didn't finish. Check your connection and try again.";
+      render();
+    });
+}
+
 function startListening(){
   if(!SR || listening || recording) return;
   try{
@@ -1168,6 +1216,10 @@ function startListening(){
     recog.interimResults = false;
     recog.maxAlternatives = 5;
     recog.continuous = false;
+    if(onDevice === "available"){
+      // Runs against the downloaded pack: no network, audio stays on device.
+      try{ recog.processLocally = true; }catch(e){}
+    }
     srError = "";
     recog.onresult = function(ev){
       const res = ev.results[0];
@@ -1182,10 +1234,13 @@ function startListening(){
         "no-speech": "Didn't catch anything — try again a bit louder.",
         "not-allowed": "Microphone access is blocked for this page.",
         "service-not-allowed": "This browser build has no speech recognition service.",
-        "network": "Speech recognition needs an internet connection.",
+        "network": canOnDevice && onDevice !== "available"
+          ? "No connection. Download the Japanese speech model below and voice typing will work offline."
+          : "Speech recognition couldn't reach the network.",
         "audio-capture": "No microphone found."
       }[ev.error] || ("Speech recognition failed (" + ev.error + ").");
       render();
+      if(ev.error === "network" || ev.error === "service-not-allowed") checkOnDevice();
     };
     recog.onend = function(){
       if(listening){ listening = false; render(); }
@@ -1330,6 +1385,7 @@ function render(){
       html += '<p class="ansnote">'+(srError ? '<b style="color:var(--ember)">'+esc(srError)+'</b><br>' : '')+
               'Your speech is transcribed and compared with the reading. '+
               '<a href="#" id="typeLink">type it instead</a> · <a href="#" id="skipLink">skip</a></p>';
+      html += offlineRow();
     }
   }else{
     if(checked){
@@ -1403,6 +1459,8 @@ function render(){
   if(sk) sk.addEventListener("click", function(e){
     e.preventDefault(); stopListening(); submitAnswer([""], "skip");
   });
+  const dl = $("dlModel");
+  if(dl) dl.addEventListener("click", installOnDevice);
   const tl = $("typeLink");
   if(tl) tl.addEventListener("click", function(e){
     e.preventDefault(); stopListening(); setMode("type");
@@ -1414,6 +1472,27 @@ function render(){
   stage.querySelectorAll(".tag").forEach(function(b){
     b.addEventListener("click", function(){ tag(b.getAttribute("data-s")); });
   });
+}
+
+function offlineRow(){
+  if(onDevice === "available"){
+    return '<p class="offline ok">✓ Offline recognition ready — no internet needed, '+
+           'and your voice never leaves this computer.</p>';
+  }
+  if(onDevice === "downloading"){
+    return '<p class="offline busy">Downloading the Japanese speech model… '+
+           'this happens once, and can take a few minutes.</p>';
+  }
+  if(onDevice === "downloadable"){
+    return '<div class="offline"><button class="mini" id="dlModel">⬇ Download Japanese speech model</button>'+
+           '<span>One download, then voice typing works offline and your audio stays on this machine.</span></div>';
+  }
+  if(onDevice === "unsupported" || onDevice === "unavailable"){
+    return '<p class="offline">Voice typing uses your browser\'s online service, so it needs internet. '+
+           'Chrome 138+ can download a Japanese model and run it offline; this browser can\'t. '+
+           '⌨ Type always works offline.</p>';
+  }
+  return "";
 }
 
 function answerMode(){
@@ -1904,6 +1983,7 @@ loadCard();
 refreshRail();
 $("autoSync").checked = !!S.autoSync;
 probeServer();
+checkOnDevice();
 </script>
 
 </body>
