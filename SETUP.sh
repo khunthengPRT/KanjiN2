@@ -43,8 +43,8 @@ say ""
 # ── 1. the app files must be here ──────────────────────────
 for f in index.html server.py; do
   [ -f "$f" ] || fail "Can't find $f.
-    Run this script from inside the vocab-trainer folder:
-      cd path/to/KanjiN2/vocab-trainer
+    Run this script from inside the project folder:
+      cd path/to/KanjiN2
       ./SETUP.sh"
 done
 ok "Found the app files"
