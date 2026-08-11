@@ -184,11 +184,20 @@ download a Japanese speech model once and run it locally:
 
 1. Switch to 🎤 **Speak** mode
 2. Click **⬇ Download Japanese speech model** underneath
-3. Wait — it is a one-time download and can take a few minutes
+3. Wait — it is a one-time download and can take a few minutes. A counter
+   shows how long it has been going, and **Stop waiting** backs out at any
+   point without losing anything
 
 After that the line reads **✓ Offline recognition ready**, and voice typing
 works with no connection at all. Your audio also stops leaving the computer,
 which is the nicer side effect.
+
+**If it never finishes**, the app gives up after ten minutes and says so
+rather than spinning forever. The download belongs to Chrome, not to this
+page, so the usual causes are outside the app: a slow or filtered connection,
+low disk space, or a managed-device policy. Check that 日本語 is listed under
+`chrome://settings/languages` and try again. ⌨ **Type** keeps working offline
+throughout.
 
 If your browser can't do this, the app says so and points you at ⌨ **Type**,
 which has never needed a connection.
