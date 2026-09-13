@@ -118,7 +118,7 @@ remembered.
 
 | Mode | How it works |
 | --- | --- |
-| 🎤 **Speak** | Tap **Speak the reading** and say it. Your speech is transcribed and compared with the answer. Needs Chrome or Edge; the button is greyed out elsewhere. Works offline once you download the Japanese model — see below. |
+| 🎤 **Speak** | Tap **Speak — records and checks**. One tap records your attempt *and* judges it, so you get a verdict and a clip to play back. Needs Chrome or Edge; greyed out elsewhere. Works offline once you download the Japanese model — see below. |
 | ⌨ **Type** | Type the reading and press Enter. Accepts kana *or* romaji — `eikyou` counts as えいきょう, so you don't need a Japanese keyboard. |
 | **Self-rate** | No checking. Reveal the answer and judge yourself, the way flashcards usually work. |
 
@@ -134,9 +134,16 @@ Then:
    - `2` **SO-SO** — shaky. Comes back in 2 days.
    - `3` **BURNT** — solid. Comes back in 7 days.
 
-You can record yourself at any point with **`R`** (or the red circle), in any
-mode. That's separate from the checking — it saves a clip so you can hear
-yourself over time.
+**In 🎤 Speak mode, speaking is the recording** — one tap records the attempt
+and checks it, and **`P`** plays your own take back afterwards. In ⌨ Type and
+Self-rate modes, **`R`** (or the red circle) records on its own, without a
+verdict.
+
+**The ▶ Model button is different.** It plays the *correct* reading using a
+text-to-speech voice from your operating system — not the model you downloaded
+for Speak mode. If it's greyed out, no Japanese voice is installed; see
+[Installing a Japanese voice](#installing-a-japanese-voice). Nothing else
+depends on it.
 
 Then the next word appears. Ten new words are introduced per day, on top of
 whatever is due for review.
@@ -384,3 +391,75 @@ without a toolchain.
 - **Sync is same-origin only.** The page talks to the server over relative
   URLs, so there is no CORS setup and no host to configure. Served from
   anywhere else, it quietly falls back to browser-only storage.
+
+---
+
+# Part 3 — Security and privacy
+
+Short version: **you don't need to set anything up.** The defaults keep
+everything on your machine. This section is what to know, and the one option
+that changes the picture.
+
+## What stays on your computer
+
+| | Where it lives | Leaves your machine? |
+| --- | --- | --- |
+| Progress and schedule | `data/progress.json` + browser storage | No |
+| Voice recordings | `data/clips/*.webm` + browser storage | No |
+| Speech recognition audio | processed by Chrome | **Only if the on-device model isn't installed** |
+| The word list | inside `index.html` | Nothing to send |
+
+The app makes no outbound requests of its own. There is no analytics, no
+account, no telemetry, and no third-party script or font — everything it needs
+is in the one HTML file.
+
+## The one real decision: `--phone`
+
+By default the server binds to `127.0.0.1`, which only your own computer can
+reach. Running `./SETUP.sh --phone` (or `--host 0.0.0.0`) binds it to your
+network instead, and **there is no password**. On that network, anyone who
+finds the port can:
+
+- read your progress and download your voice recordings
+- overwrite or wipe your progress
+
+It is also plain HTTP, so traffic is readable by anyone who can see the
+network. Use `--phone` on your own home wifi if you like; don't use it on cafe,
+hotel, airport, or office wifi. Closing the terminal (`Ctrl-C`) ends exposure
+immediately.
+
+## Speech recognition and your voice
+
+Before you download the Japanese model, 🎤 Speak sends your audio to your
+browser vendor's servers for transcription. After the download it runs
+**on-device** — the status line says *✓ Offline recognition ready — no internet
+needed, and your voice never leaves this computer*. If that line isn't showing,
+assume audio is leaving the machine.
+
+⌨ **Type** never involves audio at all.
+
+Recordings are ordinary `.webm` files in `data/clips/`, not encrypted. Anyone
+with access to your user account on the computer can play them. If that matters
+to you, rely on your disk encryption (FileVault, BitLocker, LUKS) — the app
+doesn't add its own.
+
+## Things the app guards against
+
+- **`data/` is git-ignored**, so progress and recordings are never committed or
+  pushed if you use git.
+- **The server serves one file.** Only `index.html` and the `/api` endpoints are
+  reachable; `server.py`, `data/`, and anything else in the folder return 404.
+  Path traversal (`/../server.py`, `/%2e%2e/…`) is refused.
+- **Saved progress is treated as untrusted.** Whatever comes back from
+  `localStorage`, an imported file, or the server is validated before use:
+  statuses must be one of the three known values, counts must be numbers, dates
+  must look like dates, and word ids must be words the app actually ships.
+  Anything else is discarded rather than rendered. Uploads are size-capped and
+  clip filenames are hashes, so a crafted name can't escape `data/clips/`.
+
+## What to do if you share the computer
+
+Use a separate operating-system account, or delete `data/` and clear the site's
+browser storage when you're done. The app has no login of its own — it assumes
+whoever is at the keyboard is you.
+

@@ -778,20 +778,66 @@ WORDS.forEach(function(w){ BY_ID[w.id]=w; });
 const TOTAL = WORDS.length;
 
 /* ── storage ────────────────────────────────────────────── */
+const STATUSES = {"new":1, soso:1, burnt:1};
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const KEY = "n2goi.v1";
 const INTERVAL = {"new":0, "soso":2, "burnt":7};
 const LABEL = {"new":"NEW","soso":"SO-SO","burnt":"BURNT"};
 
 let S = load();
 
+function num(v, min){
+  const n = Number(v);
+  return (isFinite(n) && n >= (min || 0)) ? Math.floor(n) : 0;
+}
+/* Progress arrives from localStorage, an imported file, or the server. None of
+   those are trusted input, and several fields land in innerHTML, so coerce
+   everything to a known shape rather than relying on escaping alone. */
+function sanitize(o){
+  const out = blank();
+  if(!o || typeof o !== "object") return out;
+  const today = todayKey();   // TODAY is not initialised yet when load() runs
+  out.theme = (o.theme === "dark" || o.theme === "light") ? o.theme : null;
+  out.autoSync = !!o.autoSync;
+  out.mode = (o.mode === "speak" || o.mode === "type" || o.mode === "self") ? o.mode : null;
+  out.newPerDay = num(o.newPerDay, 1) || 10;
+  if(typeof o.dlStartedAt === "number" && isFinite(o.dlStartedAt)) out.dlStartedAt = o.dlStartedAt;
+
+  const p = (o.p && typeof o.p === "object") ? o.p : {};
+  Object.keys(p).forEach(function(id){
+    if(!BY_ID[id]) return;                       // only words we actually ship
+    const r = p[id] || {};
+    out.p[id] = {
+      s: STATUSES[r.s] ? r.s : "new",
+      n: num(r.n),
+      first: DATE_RE.test(r.first) ? r.first : today,
+      due: DATE_RE.test(r.due) ? r.due : today,
+      last: DATE_RE.test(r.last) ? r.last : null,
+      rec: !!r.rec
+    };
+    if(DATE_RE.test(r.recDate)) out.p[id].recDate = r.recDate;
+  });
+
+  const d = (o.days && typeof o.days === "object") ? o.days : {};
+  Object.keys(d).forEach(function(k){
+    if(!DATE_RE.test(k)) return;                 // keys reach the DOM
+    const v = d[k] || {};
+    out.days[k] = {n:num(v.n), "new":num(v["new"]), soso:num(v.soso),
+                   burnt:num(v.burnt), rec:num(v.rec)};
+  });
+  return out;
+}
+
 function blank(){ return {v:1, p:{}, days:{}, newPerDay:10, theme:null, autoSync:false, mode:null}; }
 function load(){
   try{
     const raw = localStorage.getItem(KEY);
     if(!raw) return blank();
-    const o = JSON.parse(raw);
-    return Object.assign(blank(), o);
-  }catch(e){ return blank(); }
+    return sanitize(JSON.parse(raw));
+  }catch(e){
+    console.warn("Could not read saved progress; starting fresh.", e);
+    return blank();
+  }
 }
 let saveTimer = null;
 function save(){
@@ -971,7 +1017,7 @@ function startMeter(stream){
   recorder.addEventListener("stop", function(){ ctx.close().catch(function(){}); }, {once:true});
 }
 
-function toggleRecord(){
+function toggleRecord(after){
   if(recording){ stopRecord(); return; }
   micDenied = false; // always let a blocked mic be retried
   if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder === "undefined"){
@@ -996,14 +1042,26 @@ function toggleRecord(){
     render();
     startMeter(stream);
     recTimer = setTimeout(stopRecord, MAX_MS);
+    // Recognition runs off its own mic capture alongside the recorder, so the
+    // same utterance is both kept and judged.
+    if(typeof after === "function") after();
   }).catch(function(err){
     micDenied = true;
     micMsg = err && err.name === "NotAllowedError"
       ? "Microphone access was blocked for this page."
       : "Couldn't reach a microphone (" + ((err && err.name) || "unknown") + ").";
     recording = false;
-    render();
+    // Judging can still proceed without a saved clip.
+    if(typeof after === "function") after();
+    else render();
   });
+}
+
+/* Speak mode: one gesture records the attempt and has it judged. */
+function speakAndCheck(){
+  if(listening){ stopListening(); return; }
+  if(recording){ stopRecord(); return; }
+  toggleRecord(startListening);
 }
 
 function stopRecord(){
@@ -1351,7 +1409,7 @@ function abandonDownload(){
 }
 
 function startListening(){
-  if(!SR || listening || recording) return;
+  if(!SR || listening) return;
   try{
     recog = new SR();
     recog.lang = "ja-JP";
@@ -1368,10 +1426,13 @@ function startListening(){
       const heard = [];
       for(let i = 0; i < res.length; i++) heard.push(res[i].transcript);
       listening = false;
+      if(recording) stopRecord();      // keeps the clip for this attempt
       submitAnswer(heard, "speak");
     };
     recog.onerror = function(ev){
       listening = false;
+      // Keep whatever was captured — the attempt happened even if unrecognised.
+      if(recording) stopRecord();
       srError = {
         "no-speech": "Didn't catch anything — try again a bit louder.",
         "not-allowed": "Microphone access is blocked for this page.",
@@ -1385,6 +1446,7 @@ function startListening(){
       if(ev.error === "network" || ev.error === "service-not-allowed") checkOnDevice();
     };
     recog.onend = function(){
+      if(recording) stopRecord();
       if(listening){ listening = false; render(); }
     };
     listening = true;
@@ -1402,7 +1464,7 @@ function stopListening(){
 }
 
 /* ── practice render ────────────────────────────────────── */
-let revealed = false, checked = null, pendingInput = "";
+let revealed = false, checked = null, pendingInput = "", voiceHelpOpen = false;
 
 function current(){ return queue.length ? BY_ID[queue[0]] : null; }
 
@@ -1490,19 +1552,30 @@ function render(){
   html +=   '<button class="mini" id="playBtn"'+(hasClip?"":" disabled")+'>▶ Mine <span class="kbd">P</span></button>';
   html += '</div>';
 
+  let voiceHint = "";
+  if(voiceState === "none" || voiceState === "unsupported"){
+    voiceHint = '<p class="ansnote" style="max-width:430px">'+
+      '<b>Model</b> is greyed out because no <b>Japanese text-to-speech voice</b> is '+
+      'installed on this computer. That is separate from the speech model you '+
+      'downloaded for 🎤 Speak — this one belongs to your operating system, and the app '+
+      'can\'t install it. <a href="#" id="voiceHelp">how to add one</a></p>';
+  }
+
   let meta = "";
-  if(recording) meta = "<b>● recording</b> — tap to stop";
+  if(recording && listening) meta = "<b>● listening</b> — recording and checking";
+  else if(recording) meta = "<b>● recording</b> — tap to stop";
   else if(lastURL) meta = "saved for " + esc(w.k) + " · today";
   else if(prevClip) meta = "last take " + esc(prevClip.date);
   else meta = "press R or tap the circle";
   html += '<p class="rec-meta">'+meta+'</p>';
+  html += voiceHint;
 
   if(micDenied){
     html += '<div class="notice"><b>Recording unavailable.</b> '+esc(micMsg)+
             ' Open this page in its own browser tab and allow the mic, or keep going without it — saying the word aloud still counts, and the tagging and scheduling below work exactly the same.</div>';
   }
 
-  if(voiceState === "none" && revealed){
+  if(voiceState === "none" && (revealed || voiceHelpOpen)){
     html += '<div class="notice"><b>No model audio.</b> '+VOICE_HELP+'</div>';
   }
 
@@ -1522,10 +1595,11 @@ function render(){
     }else{
       html += '<div class="ansrow" style="justify-content:center">';
       html +=   '<button class="ansbtn'+(listening?" listening":"")+'" id="ansBtn">'+
-                  (listening ? "● Listening — say it now" : "🎤 Speak the reading")+'</button>';
+                  (listening || recording ? "● Listening — say it now"
+                                           : "🎤 Speak — records and checks")+'</button>';
       html += '</div>';
       html += '<p class="ansnote">'+(srError ? '<b style="color:var(--ember)">'+esc(srError)+'</b><br>' : '')+
-              'Your speech is transcribed and compared with the reading. '+
+              'One tap records your attempt and checks it — play it back with ▶ Mine after. '+
               '<a href="#" id="typeLink">type it instead</a> · <a href="#" id="skipLink">skip</a></p>';
       html += offlineRow();
     }
@@ -1572,7 +1646,12 @@ function render(){
 
   stage.innerHTML = html;
 
-  $("recBtn").addEventListener("click", toggleRecord);
+  $("recBtn").addEventListener("click", function(){
+    // In Speak mode the circle is the same gesture as the Speak button:
+    // record the attempt and have it judged.
+    if(mode === "speak" && !revealed) speakAndCheck();
+    else toggleRecord();
+  });
   const pb = $("playBtn");
   if(pb && hasClip) pb.addEventListener("click", playMine);
   const lb = $("listenBtn");
@@ -1585,7 +1664,7 @@ function render(){
     if(mode === "type"){
       submitAnswer([$("ansInput").value], "type");
     }else{
-      listening ? stopListening() : startListening();
+      speakAndCheck();
     }
   });
   const ai = $("ansInput");
@@ -1603,6 +1682,10 @@ function render(){
   });
   const dl = $("dlModel");
   if(dl) dl.addEventListener("click", installOnDevice);
+  const vh = $("voiceHelp");
+  if(vh) vh.addEventListener("click", function(e){
+    e.preventDefault(); voiceHelpOpen = !voiceHelpOpen; render();
+  });
   const dstop = $("dlStop");
   if(dstop) dstop.addEventListener("click", abandonDownload);
   const drc = $("dlRecheck");
@@ -1819,7 +1902,7 @@ function renderBank(){
 
   $("bankBody").innerHTML = rows.map(function(w){
     const r = rec(w.id);
-    const st = r ? '<span class="pill" data-s="'+r.s+'">'+LABEL[r.s]+'</span>'
+    const st = r ? '<span class="pill" data-s="'+esc(r.s)+'">'+esc(LABEL[r.s] || r.s)+'</span>'
                  : '<span class="mono" style="font-size:11px;color:var(--ink-3)">—</span>';
     const next = r ? esc(dueLabel(w.id)) : "—";
     const voice = (r && r.rec)
@@ -1907,10 +1990,10 @@ function renderProgress(){
   $("log").innerHTML = keys.length ? keys.map(function(k){
     const r = S.days[k];
     const pills = ["burnt","soso","new"].filter(function(s){ return r[s] > 0; })
-      .map(function(s){ return '<span class="pill" data-s="'+s+'">'+r[s]+' '+LABEL[s]+'</span>'; }).join("");
-    return '<div class="logrow"><span class="d mono">'+k+(k===TODAY?" ·今日":"")+'</span>'+
+      .map(function(s){ return '<span class="pill" data-s="'+s+'">'+esc(r[s])+' '+LABEL[s]+'</span>'; }).join("");
+    return '<div class="logrow"><span class="d mono">'+esc(k)+(k===TODAY?" ·今日":"")+'</span>'+
            '<span class="s">'+pills+'</span>'+
-           '<span class="c mono">'+r.n+' rev · '+r.rec+' rec</span></div>';
+           '<span class="c mono">'+esc(r.n)+' rev · '+esc(r.rec)+' rec</span></div>';
   }).join("") : '<div class="empty">No sessions logged yet. Tag your first word on the Practice tab.</div>';
 }
 
@@ -2019,7 +2102,7 @@ function pullAll(){
   return apiFetch("/progress")
     .then(function(r){ return r.json(); })
     .then(function(j){
-      if(j && j.p){ S = Object.assign(blank(), j); save(); }
+      if(j && j.p){ S = sanitize(j); save(); }
       return apiFetch("/clips").then(function(r){ return r.json(); });
     })
     .then(function(manifest){
@@ -2085,7 +2168,7 @@ $("impFile").addEventListener("change", function(e){
     try{
       const o = JSON.parse(t);
       if(!o || typeof o !== "object" || !o.p) throw new Error("bad shape");
-      S = Object.assign(blank(), o);
+      S = sanitize(o);
       save();
       buildQueue(); loadCard(); refreshRail(); renderBank(); renderProgress();
       $("impBtn").textContent = "✓ Imported";
