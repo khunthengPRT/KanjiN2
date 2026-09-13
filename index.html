@@ -297,6 +297,39 @@ nav.tabs button[aria-selected="true"]::after{
 }
 .offline.ok{color:var(--accent)}
 .offline.busy{color:var(--gold)}
+
+/* Indeterminate: Chrome gives no percentage, so the bar shows liveness only. */
+.offline.dl{
+  flex-direction:column;align-items:stretch;gap:9px;text-align:left;
+  border:1px solid var(--line);border-left:3px solid var(--gold);
+  border-radius:4px;padding:11px 13px;background:var(--surface);max-width:470px;
+}
+.dlhead{display:flex;align-items:baseline;justify-content:space-between;gap:12px;font-size:12.5px}
+.dlhead b{font-variant-numeric:tabular-nums;color:var(--gold)}
+.dlbar{
+  position:relative;height:6px;border-radius:3px;overflow:hidden;
+  background:var(--surface-2);
+}
+.dlbar i{
+  position:absolute;top:0;bottom:0;width:36%;border-radius:3px;
+  background:linear-gradient(90deg,transparent 0%,var(--gold) 30%,var(--gold) 70%,transparent 100%);
+  animation:dlslide 1.5s ease-in-out infinite;
+}
+@keyframes dlslide{
+  0%{left:-38%}
+  100%{left:100%}
+}
+.dlfoot{font-size:11px;color:var(--ink-3);line-height:1.5}
+.dlslow{
+  font-size:11px;line-height:1.5;color:var(--ink-2);
+  border-top:1px solid var(--line);padding-top:8px;
+}
+.dlslow b{color:var(--ink)}
+.offline.dl .mini{align-self:flex-start}
+@media (prefers-reduced-motion:reduce){
+  /* No sliding highlight; a steady muted fill still reads as "busy". */
+  .dlbar i{animation:none;left:0;width:100%;opacity:.45;background:var(--gold)}
+}
 .offline.warn{color:var(--ink-2);border:1px solid var(--line);border-left:3px solid var(--ember);
   border-radius:4px;padding:10px 12px;background:var(--surface);text-align:left;max-width:470px}
 .offline.warn b{color:var(--ember)}
@@ -1206,13 +1239,31 @@ function checkOnDevice(){
    never settle at all while the pack downloads in the background. Waiting on
    it alone leaves the UI stuck on "downloading" forever, so poll available()
    — that is the only thing that actually reports readiness. */
+/* Chrome exposes no progress signal for this download: the whole API surface
+   is available() and install(), and install() returns a bare Promise with no
+   progress events and no byte counts. So there is no honest percentage to
+   show — a bar that filled on a timer would be inventing numbers. What the
+   UI can truthfully say is "still running", how long it has been, and what
+   the browser itself reports. */
 const DL_POLL_MS = 2500;
-const DL_GIVE_UP_MS = 10 * 60 * 1000;
-let dlPoll = null, dlStart = 0, dlSeen = "";
+const DL_SLOW_MS = 3 * 60 * 1000;        // "this is taking a while" advisory
+const DL_GIVE_UP_MS = 30 * 60 * 1000;    // a big pack on a slow link is legitimate
+let dlPoll = null, dlTick = null, dlStart = 0, dlSeen = "", dlSlowShown = false;
 
-function dlElapsed(){ return dlStart ? Math.round((Date.now() - dlStart) / 1000) : 0; }
+function dlElapsed(){ return dlStart ? Math.max(0, Date.now() - dlStart) : 0; }
+function fmtDuration(ms){
+  const s = Math.round(ms / 1000);
+  if(s < 60) return s + "s";
+  const m = Math.floor(s / 60);
+  return m + "m " + String(s % 60).padStart(2, "0") + "s";
+}
 function stopPolling(){
   if(dlPoll){ clearInterval(dlPoll); dlPoll = null; }
+  if(dlTick){ clearInterval(dlTick); dlTick = null; }
+}
+function clearDlStart(){
+  dlStart = 0;
+  if(S.dlStartedAt){ delete S.dlStartedAt; save(); }
 }
 
 let declined = false;
@@ -1222,6 +1273,7 @@ function installOnDevice(){
   onDevice = "downloading";
   srError = "";
   declined = false;
+  dlSeen = "downloading";
   render();
 
   try{
@@ -1236,16 +1288,33 @@ function installOnDevice(){
 /* Poll until the pack is usable, we give up, or the user walks away. */
 function watchDownload(){
   if(!canOnDevice) return;
-  dlStart = Date.now();
+  // Remember when this started so a page reload doesn't reset the clock to
+  // 0s and make a long-running download look like it just began.
+  if(S.dlStartedAt && Date.now() - S.dlStartedAt > DL_GIVE_UP_MS){ delete S.dlStartedAt; }
+  if(!S.dlStartedAt){ S.dlStartedAt = Date.now(); save(); }
+  dlStart = S.dlStartedAt;
   stopPolling();
+  dlSlowShown = dlElapsed() > DL_SLOW_MS;
+
+  /* Tick the label in place. A full re-render would rebuild the bar element
+     and restart its CSS animation every poll, making it stutter. */
+  dlTick = setInterval(function(){
+    const el = document.getElementById("dlTime");
+    if(!el) return;
+    const nowSlow = dlElapsed() > DL_SLOW_MS;
+    if(nowSlow !== dlSlowShown){ dlSlowShown = nowSlow; render(); return; }
+    el.textContent = fmtDuration(dlElapsed());
+  }, 1000);
+
   dlPoll = setInterval(function(){
     SR.available({langs:["ja-JP"], processLocally:true}).then(function(state){
       const s = String(state || "");
+      const prevSeen = dlSeen;
       dlSeen = s;
       if(s === "available"){
         stopPolling();
         onDevice = "available";
-        dlStart = 0;
+        clearDlStart();
         render();
         return;
       }
@@ -1256,13 +1325,15 @@ function watchDownload(){
         render();
         return;
       }
-      if(Date.now() - dlStart > DL_GIVE_UP_MS){
+      if(dlElapsed() > DL_GIVE_UP_MS){
         stopPolling();
         onDevice = "stalled";
         render();
         return;
       }
-      render();   // keeps the elapsed counter moving so it never looks frozen
+      // The 1s ticker owns the elapsed label; only rebuild when the reported
+      // state actually changed, so the bar's animation isn't reset.
+      if(s !== prevSeen) render();
     }).catch(function(){
       stopPolling();
       onDevice = "stalled";
@@ -1274,7 +1345,7 @@ function watchDownload(){
 
 function abandonDownload(){
   stopPolling();
-  dlStart = 0;
+  clearDlStart();
   onDevice = "downloadable";
   render();
 }
@@ -1555,21 +1626,38 @@ function offlineRow(){
            'and your voice never leaves this computer.</p>';
   }
   if(onDevice === "downloading"){
-    const t = dlElapsed();
-    return '<div class="offline busy">'+
-           '<span>Downloading the Japanese speech model… <b class="mono">'+t+'s</b>'+
-           (dlSeen ? ' · browser reports <code>'+esc(dlSeen)+'</code>' : '')+
-           '<br>Chrome fetches this in the background, so it can take a while on a slow '+
-           'connection. You can keep studying with ⌨ Type in the meantime.</span>'+
-           '<button class="mini" id="dlStop">Stop waiting</button></div>';
+    const ms = dlElapsed();
+    const slow = ms > DL_SLOW_MS;
+    let h = '<div class="offline busy dl">';
+    h += '<div class="dlhead"><span>Downloading the Japanese speech model…</span>'+
+         '<b class="mono" id="dlTime">'+fmtDuration(ms)+'</b></div>';
+    h += '<div class="dlbar" role="progressbar" aria-label="Downloading the Japanese speech model" '+
+         'aria-valuetext="in progress, '+fmtDuration(ms)+' elapsed"><i></i></div>';
+    h += '<div class="dlfoot">'+
+         (dlSeen ? 'Chrome reports <code>'+esc(dlSeen)+'</code>. ' : '')+
+         'Chrome doesn\'t report a percentage for this download, so the bar only shows '+
+         'it\'s still running. Keep studying with ⌨ Type meanwhile — this continues in '+
+         'the background.</div>';
+    if(slow){
+      h += '<div class="dlslow">Taking longer than usual. To see the real state, open '+
+           '<code>chrome://components</code> in a new tab and look for '+
+           '<b>Speech On-Device API (SODA)</b> — that page shows Chrome\'s actual download '+
+           'status and lets you retry it.</div>';
+    }
+    h += '<button class="mini" id="dlStop">Stop waiting</button>';
+    h += '</div>';
+    return h;
   }
   if(onDevice === "stalled"){
-    return '<div class="offline warn"><span><b>The download didn\'t complete.</b> '+
+    return '<div class="offline warn"><span><b>The download didn\'t complete</b>'+
+           (dlStart ? ' after '+fmtDuration(dlElapsed()) : '')+'. '+
            (dlSeen ? 'Chrome last reported <code>'+esc(dlSeen)+'</code>. ' : '')+
            'This is Chrome\'s own download, not something this page controls — it can be '+
            'blocked by a slow or filtered connection, low disk space, or a managed-device '+
-           'policy. Check <code>chrome://settings/languages</code> for 日本語 and Chrome\'s '+
-           'speech settings, then try again. ⌨ Type works offline right now.</span>'+
+           'policy. Open <code>chrome://components</code> and look for '+
+           '<b>Speech On-Device API (SODA)</b> to see its real status, and check '+
+           '<code>chrome://settings/languages</code> lists 日本語. '+
+           '⌨ Type works offline right now.</span>'+
            '<button class="mini" id="dlModel">Try again</button>'+
            '<button class="mini" id="dlRecheck">Check again</button></div>';
   }

@@ -184,20 +184,29 @@ download a Japanese speech model once and run it locally:
 
 1. Switch to 🎤 **Speak** mode
 2. Click **⬇ Download Japanese speech model** underneath
-3. Wait — it is a one-time download and can take a few minutes. A counter
-   shows how long it has been going, and **Stop waiting** backs out at any
-   point without losing anything
+3. Wait. A bar shows it's still running and a clock shows how long it has
+   been going. **Stop waiting** backs out at any point without losing anything
 
 After that the line reads **✓ Offline recognition ready**, and voice typing
 works with no connection at all. Your audio also stops leaving the computer,
 which is the nicer side effect.
 
-**If it never finishes**, the app gives up after ten minutes and says so
-rather than spinning forever. The download belongs to Chrome, not to this
-page, so the usual causes are outside the app: a slow or filtered connection,
-low disk space, or a managed-device policy. Check that 日本語 is listed under
-`chrome://settings/languages` and try again. ⌨ **Type** keeps working offline
-throughout.
+**Why there's no percentage.** Chrome exposes no progress information for this
+download — the whole API is "is it available yet", with no byte counts and no
+progress events. So the bar is deliberately indeterminate: it shows the
+download is alive, not how far along it is. Anything claiming a percentage
+here would be made up.
+
+**To see the real status**, open `chrome://components` in a new tab and look
+for **Speech On-Device API (SODA)**. That is Chrome's own view of the download
+and it can retry from there.
+
+**If it never finishes**, the app keeps waiting for up to 30 minutes, then
+says so rather than spinning forever. The download belongs to Chrome, not to
+this page, so the usual causes are outside the app: a slow or filtered
+connection, low disk space, or a managed-device policy. Check that 日本語 is
+listed under `chrome://settings/languages` and try again. ⌨ **Type** works
+offline throughout.
 
 If your browser can't do this, the app says so and points you at ⌨ **Type**,
 which has never needed a connection.
