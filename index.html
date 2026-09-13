@@ -139,7 +139,8 @@ nav.tabs button[aria-selected="true"]::after{
 .stage{display:flex;flex-direction:column;align-items:center;gap:22px}
 
 .glyph-box{
-  position:relative;width:min(64vw,272px);aspect-ratio:1;
+  --boxw:min(64vw,272px);
+  position:relative;width:var(--boxw);aspect-ratio:1;
   background:var(--surface);border:1px solid var(--line-2);
   display:grid;place-items:center;
   box-shadow:var(--shadow);
@@ -155,7 +156,8 @@ nav.tabs button[aria-selected="true"]::after{
 }
 .glyph{
   font-family:var(--font-jp-serif);line-height:1;position:relative;z-index:1;
-  font-size:var(--gsize,110px);letter-spacing:.02em;text-align:center;
+  font-size:calc(var(--boxw) * var(--gfrac,.42));
+  letter-spacing:.02em;text-align:center;white-space:nowrap;
   padding:0 6px;font-weight:500;
 }
 .pos-tag{
@@ -467,6 +469,40 @@ td.num{font-family:var(--font-mono);font-size:12px;color:var(--ink-3);text-align
 .toggle input{accent-color:var(--accent);width:14px;height:14px;cursor:pointer;margin:0}
 .toggle:has(input:checked){border-color:var(--accent);color:var(--accent)}
 
+/* ── phones ─────────────────────────────────────────────────
+   iPhone 13 is 390x844 CSS px. Chrome on iOS overlays a toolbar that
+   grows and shrinks, so vertical space is measured with dvh; the notch
+   and home indicator are cleared with the safe-area insets. */
+@supports (padding:max(0px)){
+  body{
+    padding-left:env(safe-area-inset-left);
+    padding-right:env(safe-area-inset-right);
+  }
+  .wrap{padding-bottom:max(96px, calc(env(safe-area-inset-bottom) + 72px))}
+}
+
+@media (pointer:coarse){
+  /* Apple's 44px minimum: these are all finger targets. */
+  .mini{min-height:44px;padding:0 16px}
+  .modebar button{min-height:44px;padding:0 16px}
+  .chip{height:40px;padding:0 15px}
+  .iconbtn{width:44px;height:44px}
+  nav.tabs button{min-height:44px;padding:12px 14px 14px}
+  /* Inline links in the answer notes are real controls on a phone. */
+  .ansnote a,.dlfoot a{
+    display:inline-flex;align-items:center;justify-content:center;
+    min-height:44px;min-width:44px;padding:0 12px;
+  }
+  .tag{padding:13px 6px 12px}
+  .playcell button{width:38px;height:38px}
+  .ansbtn{min-height:50px}
+  .rec-btn{width:72px;height:72px}
+  /* iOS zooms the page when a focused input is under 16px. */
+  .search,.ansinput{font-size:16px}
+  .ansinput{height:50px}
+}
+
+
 @media (max-width:520px){
   .rail{grid-template-columns:repeat(2,1fr)}
   .rail div:nth-child(2){border-right:none}
@@ -474,6 +510,59 @@ td.num{font-family:var(--font-mono);font-size:12px;color:var(--ink-3);text-align
   .brand{font-size:23px}
   nav.tabs button{padding:7px 10px 11px;font-size:13px}
   nav.tabs button .jp{margin-right:4px}
+}
+@media (max-width:430px){
+  .wrap{padding:0 14px 96px}
+  /* Vertical space is the scarce resource on a phone: keep the stats to one
+     compact strip so the card and its controls fit without scrolling. */
+  .rail{grid-template-columns:repeat(4,1fr)}
+  .rail div{padding:7px 0 8px;border-bottom:none !important}
+  .rail div:nth-child(2){border-right:1px solid var(--line) !important}
+  .rail .k{font-size:8px;letter-spacing:.1em;margin-bottom:1px}
+  .rail .v{font-size:17px}
+  .rail .v small{font-size:9px}
+  header.masthead{padding:12px 0 9px}
+  nav.tabs{padding-top:9px;margin-bottom:14px}
+  .session-line{margin-bottom:12px}
+  .stage{gap:13px}
+  /* Put the word and the thing you answer with side by side in the fold;
+     playback, notes and the mode switch sit below. Flex order only — the
+     DOM (and so the reading order for assistive tech) is unchanged where it
+     matters, since the control already follows the card. */
+  .glyph-box{order:1}
+  .prompt{order:2}
+  .ansrow,.reveal-btn{order:3}
+  .ansnote{order:4}
+  .verdict{order:5}
+  .answer{order:6}
+  .tag-label{order:7}
+  .tags{order:8}
+  .rec-row{order:9}
+  .rec-meta{order:10}
+  .offline{order:11}
+  .notice{order:12}
+  .modebar{order:13}
+  .rec-btn{width:62px;height:62px}
+  .rec-meta{min-height:0}
+  .prompt{margin-top:-4px}
+  .glyph-box{--boxw:min(60vw,238px)}
+  .rec-row{gap:10px}
+  .brand{font-size:22px}
+  .brand-sub{font-size:9.5px;letter-spacing:.18em}
+  header.masthead{padding:16px 0 12px}
+  .session-line{font-size:10px;letter-spacing:.06em}
+  .answer{padding:16px 15px 15px}
+  .answer .reading{font-size:21px}
+  .answer .ex .jp{font-size:17px}
+  .tags{gap:6px}
+  .tag .d{font-size:9.5px}
+  .modebar{width:100%}
+  .modebar button{flex:1 1 0;padding:0 6px;font-size:12px}
+  .offline,.offline.dl,.offline.warn{max-width:100%}
+  .verdict{padding:10px 12px}
+  .datarow{gap:6px}
+  .logrow{grid-template-columns:minmax(84px,auto) 1fr;row-gap:4px}
+  .logrow .c{grid-column:1 / -1}
 }
 @media (prefers-reduced-motion:reduce){
   *{transition-duration:.01ms !important;animation-duration:.01ms !important}
@@ -1022,7 +1111,9 @@ function toggleRecord(after){
   micDenied = false; // always let a blocked mic be retried
   if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder === "undefined"){
     micDenied = true;
-    micMsg = "This browser doesn't expose microphone recording to the page.";
+    micMsg = SECURE
+      ? "This browser doesn't expose microphone recording to the page."
+      : INSECURE_WHY;
     render(); return;
   }
   navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){
@@ -1263,6 +1354,14 @@ function judge(input, w){
 }
 
 /* ── voice typing (speech recognition) ──────────────────── */
+const SECURE = window.isSecureContext;
+const INSECURE_WHY =
+  "This page is served over plain http from " + location.host + ", which browsers " +
+  "treat as an insecure origin — the microphone is simply not offered there. " +
+  "Only https:// and localhost count as secure. Start the server with " +
+  "./SETUP.sh --phone (it switches to https) and reload, or keep using \u2328 Type, " +
+  "which works either way.";
+
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 let recog = null, listening = false, srError = "";
 
@@ -1468,14 +1567,16 @@ let revealed = false, checked = null, pendingInput = "", voiceHelpOpen = false;
 
 function current(){ return queue.length ? BY_ID[queue[0]] : null; }
 
+/* Fraction of the card's width per character, so N characters always occupy
+   about 90% of it whatever size the card is. */
 function glyphSize(s){
   const n = s.length;
-  if(n <= 1) return "clamp(84px, 34vw, 138px)";
-  if(n === 2) return "clamp(70px, 27vw, 112px)";
-  if(n === 3) return "clamp(52px, 20vw, 84px)";
-  if(n === 4) return "clamp(42px, 16vw, 66px)";
-  if(n === 5) return "clamp(34px, 13vw, 54px)";
-  return "clamp(28px, 11vw, 45px)";
+  if(n <= 1) return .70;
+  if(n === 2) return .42;
+  if(n === 3) return .29;
+  if(n === 4) return .22;
+  if(n === 5) return .175;
+  return .88 / n;
 }
 function esc(s){
   return String(s).replace(/[&<>"]/g, function(c){
@@ -1526,7 +1627,7 @@ function render(){
   html += '<div class="glyph-box'+(recording?" rec":"")+'">';
   html +=   '<span class="pos-tag">'+esc(w.pos)+'</span>';
   html +=   '<span class="seen-tag">'+esc(seen)+' · '+esc(dueLabel(w.id))+'</span>';
-  html +=   '<div class="glyph" style="--gsize:'+glyphSize(w.k)+'">'+esc(w.k)+'</div>';
+  html +=   '<div class="glyph" style="--gfrac:'+glyphSize(w.k)+'">'+esc(w.k)+'</div>';
   html += '</div>';
 
   const mode = answerMode();
@@ -1553,7 +1654,9 @@ function render(){
   html += '</div>';
 
   let voiceHint = "";
-  if(voiceState === "none" || voiceState === "unsupported"){
+  if(!SECURE){
+    voiceHint = '<div class="notice"><b>Voice is off on this address.</b> '+esc(INSECURE_WHY)+'</div>';
+  }else if(voiceState === "none" || voiceState === "unsupported"){
     voiceHint = '<p class="ansnote" style="max-width:430px">'+
       '<b>Model</b> is greyed out because no <b>Japanese text-to-speech voice</b> is '+
       'installed on this computer. That is separate from the speech model you '+
@@ -1637,9 +1740,11 @@ function render(){
 
   html += '<div class="modebar" role="group" aria-label="How to answer">';
   [["speak","🎤 Speak"],["type","⌨ Type"],["self","Self-rate"]].forEach(function(m){
-    const off = m[0] === "speak" && !SR;
+    const off = m[0] === "speak" && !canSpeak();
+    const why = !SR ? "This browser has no speech recognition — Chrome or Edge does"
+                    : "Voice needs https or localhost — see the note below";
     html += '<button data-mode="'+m[0]+'" aria-pressed="'+(mode === m[0])+'"'+
-            (off ? ' disabled title="This browser has no speech recognition — Chrome or Edge does"' : '')+
+            (off ? ' disabled title="'+why+'"' : '')+
             '>'+m[1]+'</button>';
   });
   html += '</div>';
@@ -1756,9 +1861,10 @@ function offlineRow(){
   return "";
 }
 
+function canSpeak(){ return !!SR && SECURE; }
 function answerMode(){
-  const m = S.mode || (SR ? "speak" : "type");
-  return (m === "speak" && !SR) ? "type" : m;
+  const m = S.mode || (canSpeak() ? "speak" : "type");
+  return (m === "speak" && !canSpeak()) ? "type" : m;
 }
 function setMode(m){
   stopListening();

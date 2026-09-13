@@ -165,6 +165,33 @@ it happens by itself.
 Everything lands in the `data` folder next to `SETUP.sh`. Copy that folder
 anywhere to back it up.
 
+## Studying on your phone
+
+Same wifi, same data — the phone talks to the server on your computer, so
+progress and recordings stay in one place.
+
+1. On the computer: `./SETUP.sh --phone`
+2. It prints a second line, **From your phone:** `https://192.168.x.x:8788`
+3. Type that into Chrome or Safari on the phone
+4. It warns the certificate isn't trusted. Tap **Advanced → Proceed** — see
+   [why](#why-your-phone-warns-about-the-certificate)
+5. Allow the microphone when asked
+
+Leave the terminal running while you study; `Ctrl-C` stops it.
+
+**Why HTTPS and not plain http:** browsers only hand out the microphone on a
+"secure origin". `localhost` counts, a plain `http://192.168.…` address does
+not — on that address `navigator.mediaDevices` doesn't even exist, so there is
+no recording and no 🎤 Speak. `--phone` therefore generates a certificate and
+serves over HTTPS so voice works. The app detects an insecure address and says
+so rather than showing controls that can't work.
+
+If `openssl` isn't installed, `--phone` falls back to plain http and warns you:
+⌨ **Type** still works completely, voice does not.
+
+**Tip:** in Safari, Share → *Add to Home Screen* gives it an icon and opens it
+without browser chrome.
+
 ## When something goes wrong
 
 | What you see | What it means | Fix |
@@ -178,6 +205,9 @@ anywhere to back it up.
 | 🎤 **Speak** button greyed out | Your browser has no speech recognition | Use Chrome or Edge, or switch to ⌨ **Type** |
 | "No connection. Download the Japanese speech model below…" | Speak mode is using the browser's online service | Click **⬇ Download Japanese speech model** under the Speak button — after that it runs offline. Or use ⌨ **Type**, which never needs internet |
 | `Port 8788 is busy` | Something else is using it | The script picks the next free port automatically; use the URL it prints |
+| Phone: "connection is not private" | The certificate is self-signed by your computer | Tap **Advanced → Proceed**. Expected on your own network |
+| Phone: 🎤 Speak greyed out, "Voice is off on this address" | You're on a plain `http://` LAN address | Restart with `./SETUP.sh --phone`, which serves HTTPS, and reload |
+| Phone can't reach the address at all | Different wifi, or a firewall | Put both devices on the same network; allow the port if your firewall asks |
 | Progress vanished | Browser data was cleared | Progress tab → **Pull from server** (works if you'd pushed before) |
 
 ### Voice typing without internet
@@ -423,10 +453,16 @@ finds the port can:
 - read your progress and download your voice recordings
 - overwrite or wipe your progress
 
-It is also plain HTTP, so traffic is readable by anyone who can see the
-network. Use `--phone` on your own home wifi if you like; don't use it on cafe,
-hotel, airport, or office wifi. Closing the terminal (`Ctrl-C`) ends exposure
-immediately.
+Traffic itself is encrypted — `--phone` serves over HTTPS using a certificate
+it generates for your machine, because browsers refuse the microphone on a
+plain-HTTP address. **Encryption is not authentication**: the connection is
+private, but nothing checks *who* is connecting. Use `--phone` on your own home
+wifi if you like; don't use it on cafe, hotel, airport, or office wifi. Closing
+the terminal (`Ctrl-C`) ends exposure immediately.
+
+The certificate and its private key live in `data/cert/` (the key is written
+`0600`, owner-only). They're covered by `.gitignore`, so they're never
+committed. Delete the folder to force a fresh one.
 
 ## Speech recognition and your voice
 
@@ -456,6 +492,14 @@ doesn't add its own.
   must look like dates, and word ids must be words the app actually ships.
   Anything else is discarded rather than rendered. Uploads are size-capped and
   clip filenames are hashes, so a crafted name can't escape `data/clips/`.
+
+## Why your phone warns about the certificate
+
+The certificate is **self-signed** — made by your computer, vouched for by
+nothing else. Your phone can't tell it apart from an impostor's, so it warns
+once and you tap through. On your own wifi, connecting to your own machine,
+that's the expected cost of getting HTTPS without a public domain name. If you
+ever see that warning on a network you don't control, don't tap through.
 
 ## What to do if you share the computer
 

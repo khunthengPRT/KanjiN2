@@ -4,7 +4,10 @@
 #
 #   ./SETUP.sh              start on the first free port from 8788
 #   ./SETUP.sh --port 9000  start on a port you choose
-#   ./SETUP.sh --phone      also allow other devices on your wifi to connect
+#   ./SETUP.sh --phone      also allow your phone on the same wifi to connect
+#                           (uses https, because browsers only give the
+#                            microphone to a secure origin)
+#   ./SETUP.sh --no-https   force plain http with --phone (typing only)
 #   ./SETUP.sh --no-open    don't launch a browser
 #
 # Stop the server with Ctrl-C. Nothing is installed and nothing outside this
@@ -25,10 +28,12 @@ fail() { printf '\n  %s✗ %s%s\n\n' "$red" "$*" "$reset" >&2; exit 1; }
 PORT=8788
 HOST=127.0.0.1
 OPEN=1
+NOHTTPS=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --port)    PORT="${2:-}"; shift 2 ;;
     --phone)   HOST=0.0.0.0; shift ;;
+    --no-https) NOHTTPS=1; shift ;;
     --no-open) OPEN=0; shift ;;
     -h|--help) sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *)         fail "Unknown option: $1  (try ./SETUP.sh --help)" ;;
@@ -98,7 +103,19 @@ done
 mkdir -p data
 ok "Your data will be saved in $(pwd)/data"
 
-URL="http://localhost:$PORT"
+SCHEME=http
+if [ "$HOST" != "127.0.0.1" ] && [ "$NOHTTPS" = "0" ]; then
+  if command -v openssl >/dev/null 2>&1; then
+    SCHEME=https
+    ok "Serving over https so your phone can use the microphone"
+  else
+    say ""
+    say "  ${red}openssl not found${reset} — serving plain http."
+    say "  ${dim}Your phone will be able to type answers, but not record or speak:${reset}"
+    say "  ${dim}browsers only expose the microphone on https or localhost.${reset}"
+  fi
+fi
+URL="$SCHEME://localhost:$PORT"
 
 # ── 4. open a browser once the server answers ──────────────
 if [ "$OPEN" = "1" ]; then
@@ -136,7 +153,11 @@ finally:
     s.close()
 PY
 )
-  [ -n "${IP:-}" ] && say "  ${bold}From your phone:${reset}           http://$IP:$PORT"
+  [ -n "${IP:-}" ] && say "  ${bold}From your phone:${reset}           $SCHEME://$IP:$PORT"
+  if [ "$SCHEME" = "https" ]; then
+    say "  ${dim}Your phone will warn that the certificate isn't trusted — that's expected.${reset}"
+    say "  ${dim}It's signed by this computer, for this computer. Tap Advanced → Proceed.${reset}"
+  fi
   say "  ${dim}Anyone on this network can read and change your data — trusted wifi only.${reset}"
 fi
 say ""
@@ -144,4 +165,7 @@ say "  ${dim}Allow microphone access when your browser asks — that's how recor
 say "  ${dim}Press Ctrl-C here when you're done studying.${reset}"
 say ""
 
-exec "$PY" server.py --host "$HOST" --port "$PORT" --quiet
+HTTPS_FLAG=""
+[ "$SCHEME" = "https" ] && HTTPS_FLAG="--https"
+[ "$NOHTTPS" = "1" ] && HTTPS_FLAG="--no-https"
+exec "$PY" server.py --host "$HOST" --port "$PORT" --quiet $HTTPS_FLAG
