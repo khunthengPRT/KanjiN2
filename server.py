@@ -23,11 +23,14 @@ import hashlib
 import json
 import os
 import posixpath
+import shutil
 import socket
 import ssl
 import subprocess
 import sys
+import threading
 import time
+import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse, parse_qs, unquote
 
@@ -234,6 +237,50 @@ def lan_ip():
         s.close()
 
 
+def find_openssl():
+    """Locate an openssl binary.
+
+    On macOS and Linux it is on PATH. On Windows it usually is not, but Git
+    for Windows bundles one, and so do the common standalone installers — so
+    look there before giving up.
+    """
+    found = shutil.which("openssl")
+    if found:
+        return found
+    if os.name != "nt":
+        return None
+    bases = [os.environ.get("ProgramFiles", r"C:\Program Files"),
+             os.environ.get("ProgramFiles(x86)", r"C:\Program Files (x86)"),
+             os.environ.get("LOCALAPPDATA", "")]
+    rels = [r"Git\usr\bin\openssl.exe",
+            r"Git\mingw64\bin\openssl.exe",
+            r"OpenSSL-Win64\bin\openssl.exe",
+            r"OpenSSL-Win32\bin\openssl.exe",
+            r"Programs\Git\usr\bin\openssl.exe"]
+    for base in bases:
+        if not base:
+            continue
+        for rel in rels:
+            cand = os.path.join(base, rel)
+            if os.path.isfile(cand):
+                return cand
+    return None
+
+
+def free_port(host, start, span=20):
+    """First port from `start` that nothing else is holding."""
+    for port in range(start, start + span + 1):
+        s = socket.socket()
+        try:
+            s.bind((host if host != "0.0.0.0" else "", port))
+            return port
+        except OSError:
+            continue
+        finally:
+            s.close()
+    return None
+
+
 def ensure_cert(ip):
     """Create a self-signed certificate for this machine, once.
 
@@ -250,8 +297,12 @@ def ensure_cert(ip):
     if os.path.isfile(cert) and os.path.isfile(key):
         return cert, key
 
+    openssl = find_openssl()
+    if not openssl:
+        return None
+
     alt = "DNS:localhost,IP:127.0.0.1" + (",IP:" + ip if ip else "")
-    cmd = ["openssl", "req", "-x509", "-newkey", "rsa:2048", "-nodes",
+    cmd = [openssl, "req", "-x509", "-newkey", "rsa:2048", "-nodes",
            "-keyout", key, "-out", cert,
            "-days", "825",                      # iOS refuses longer-lived certs
            "-subj", "/CN=goi-renshucho",
@@ -278,6 +329,10 @@ def main():
                          "on the LAN can use the microphone")
     ap.add_argument("--no-https", dest="no_https", action="store_true",
                     help="force plain HTTP even when binding to the network")
+    ap.add_argument("--auto-port", dest="auto_port", action="store_true",
+                    help="if the port is busy, move to the next free one")
+    ap.add_argument("--open", dest="open_browser", action="store_true",
+                    help="open the app in your browser once the server is up")
     ap.add_argument("--quiet", action="store_true",
                     help="skip the banner (SETUP.sh prints its own)")
     args = ap.parse_args()
@@ -285,6 +340,15 @@ def main():
     ensure_dirs()
     if not os.path.isfile(os.path.join(ROOT, "index.html")):
         sys.exit("index.html is not next to server.py — keep the exported files together.")
+
+    if args.auto_port:
+        chosen = free_port(args.host, args.port)
+        if chosen is None:
+            sys.exit("Ports %d-%d are all in use. Pick another with --port."
+                     % (args.port, args.port + 20))
+        if chosen != args.port and not args.quiet:
+            print("Port %d was busy — using %d instead." % (args.port, chosen))
+        args.port = chosen
 
     ip = lan_ip() if args.host != "127.0.0.1" else ""
     # Binding to the network is pointless for this app without TLS, since the
@@ -314,6 +378,11 @@ def main():
         if args.host != "127.0.0.1":
             print("  note    bound to %s with no password — trusted networks only." % args.host)
         print("  stop    Ctrl-C\n")
+    if args.open_browser:
+        # Serve first, open second: a browser that wins the race sees nothing.
+        threading.Timer(0.6, lambda: webbrowser.open(
+            "%s://localhost:%d" % (scheme, args.port))).start()
+
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:

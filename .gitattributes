@@ -1,0 +1,9 @@
+# Keep shell scripts LF even on Windows checkouts; a CRLF .sh will not run.
+*.sh text eol=lf
+# Batch files need CRLF or cmd.exe can mis-parse them.
+*.cmd text eol=crlf
+*.bat text eol=crlf
+Dockerfile text eol=lf
+*.py text eol=lf
+*.md text eol=lf
+*.html text eol=lf
