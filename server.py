@@ -23,6 +23,7 @@ import hashlib
 import json
 import os
 import posixpath
+import re
 import socket
 import ssl
 import subprocess
@@ -222,6 +223,12 @@ class Handler(BaseHTTPRequestHandler):
         return self._err(404, "unknown endpoint")
 
 
+def env(name, default=None):
+    """Read a GOI_* setting, treating empty as unset (Compose sets empties)."""
+    v = os.environ.get(name)
+    return v if v not in (None, "") else default
+
+
 def lan_ip():
     """Best guess at this machine's address on the local network."""
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -234,7 +241,7 @@ def lan_ip():
         s.close()
 
 
-def ensure_cert(ip):
+def ensure_cert(ip, extra=""):
     """Create a self-signed certificate for this machine, once.
 
     Browsers only expose the microphone on a "secure context". localhost
@@ -250,7 +257,14 @@ def ensure_cert(ip):
     if os.path.isfile(cert) and os.path.isfile(key):
         return cert, key
 
-    alt = "DNS:localhost,IP:127.0.0.1" + (",IP:" + ip if ip else "")
+    alt = "DNS:localhost,IP:127.0.0.1"
+    for name in [ip] + [x.strip() for x in extra.split(",")]:
+        if not name:
+            continue
+        kind = "IP" if re.match(r"^\d+\.\d+\.\d+\.\d+$", name) else "DNS"
+        entry = "," + kind + ":" + name
+        if entry not in alt:
+            alt += entry
     cmd = ["openssl", "req", "-x509", "-newkey", "rsa:2048", "-nodes",
            "-keyout", key, "-out", cert,
            "-days", "825",                      # iOS refuses longer-lived certs
@@ -270,9 +284,15 @@ def ensure_cert(ip):
 
 def main():
     ap = argparse.ArgumentParser(description="Serve 語彙練習帳 and store its data on disk.")
-    ap.add_argument("--host", default="127.0.0.1",
-                    help="bind address (default 127.0.0.1; use 0.0.0.0 for LAN access)")
-    ap.add_argument("--port", type=int, default=8788, help="port (default 8788)")
+    ap.add_argument("--host", default=env("GOI_HOST", "127.0.0.1"),
+                    help="bind address (default 127.0.0.1; use 0.0.0.0 for LAN access). "
+                         "Env: GOI_HOST")
+    ap.add_argument("--port", type=int, default=int(env("GOI_PORT", "8788")),
+                    help="port (default 8788). Env: GOI_PORT")
+    ap.add_argument("--san", default=env("GOI_SAN", ""),
+                    help="extra address(es) the certificate should cover, comma "
+                         "separated. In a container lan_ip() sees the container's "
+                         "own address, so pass the host's here. Env: GOI_SAN")
     ap.add_argument("--https", action="store_true",
                     help="serve over TLS with a self-signed certificate, so phones "
                          "on the LAN can use the microphone")
@@ -286,11 +306,25 @@ def main():
     if not os.path.isfile(os.path.join(ROOT, "index.html")):
         sys.exit("index.html is not next to server.py — keep the exported files together.")
 
-    ip = lan_ip() if args.host != "127.0.0.1" else ""
+    # Inside a container lan_ip() reports the container's own address, which no
+    # phone can reach — so --san/GOI_SAN wins when it is set.
+    detected = lan_ip() if args.host != "127.0.0.1" else ""
+    ip = (args.san.split(",")[0].strip() or detected) if args.san else detected
+
     # Binding to the network is pointless for this app without TLS, since the
-    # microphone is unavailable on an insecure origin. Default it on.
-    want_tls = args.https or (args.host != "127.0.0.1" and not args.no_https)
-    pair = ensure_cert(ip) if want_tls else None
+    # microphone is unavailable on an insecure origin. Default it on — unless
+    # GOI_TLS says otherwise, which is how the container image opts out when
+    # you reach it through a port mapping on localhost.
+    tls_env = env("GOI_TLS")
+    if args.https:
+        want_tls = True
+    elif args.no_https:
+        want_tls = False
+    elif tls_env is not None:
+        want_tls = tls_env.strip().lower() not in ("0", "false", "no", "off")
+    else:
+        want_tls = args.host != "127.0.0.1"
+    pair = ensure_cert(ip, args.san) if want_tls else None
     scheme = "https" if pair else "http"
 
     httpd = ThreadingHTTPServer((args.host, args.port), Handler)

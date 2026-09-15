@@ -1,0 +1,13 @@
+# Your progress, recordings and certificate stay on the host, in a volume.
+data/
+.git/
+.gitignore
+.gitattributes
+__pycache__/
+*.pyc
+*.md
+SETUP.sh
+SETUP.cmd
+Dockerfile
+.dockerignore
+docker-compose.yml

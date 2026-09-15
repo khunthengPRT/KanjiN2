@@ -1,0 +1,28 @@
+# docker compose up -d     start in the background
+# docker compose logs -f   watch it
+# docker compose down      stop
+#
+# Then open http://localhost:8788
+
+services:
+  goi:
+    build: .
+    image: goi-renshucho
+    container_name: goi-renshucho
+    restart: unless-stopped
+    ports:
+      - "8788:8788"
+    volumes:
+      # Progress, recordings and the certificate live here, on the host.
+      # Swap for a path like ./data if you would rather see the files.
+      - goi-data:/app/data
+    environment:
+      # Uncomment both to study from your phone, and put YOUR computer's LAN
+      # address in GOI_SAN — inside a container the app can only see the
+      # container's own address, which no phone can reach.
+      # GOI_TLS: "1"
+      # GOI_SAN: "192.168.1.50"
+      TZ: "${TZ:-UTC}"
+
+volumes:
+  goi-data:

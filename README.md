@@ -14,6 +14,9 @@ That's the whole setup — the script checks your Python, starts a small local
 server, and opens the app. Requires **Python 3.8 or newer**, standard library
 only. Never used a terminal? Part 1 walks through it from the beginning.
 
+Prefer containers? **[INSTALL-Docker.md](INSTALL-Docker.md)** — `docker compose
+up -d` and you're done, no Python on the host.
+
 ---
 
 # Part 1 — Getting started
