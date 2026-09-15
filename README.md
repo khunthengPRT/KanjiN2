@@ -68,9 +68,9 @@ A terminal is a window where you type commands instead of clicking.
 - **Mac** — open **Terminal** (Cmd-Space, type "Terminal"). Type `cd ` (with a
   space after it), then drag the project folder from Finder onto the window —
   it fills in the path for you. Press Enter.
-- **Windows** — open the project folder in File Explorer, right-click an empty
-  area, and choose **Git Bash Here** (installed with git). If you don't have
-  Git Bash, see [Windows without Git Bash](#windows-without-git-bash).
+- **Windows** — you don't need a terminal at all: double-click
+  **[`SETUP.cmd`](SETUP.cmd)** and skip to Step 4. See
+  **[INSTALL-Windows.md](INSTALL-Windows.md)** for the full walkthrough.
 - **Linux** — right-click the folder and choose **Open in Terminal**.
 
 To confirm you're in the right place, type `ls` (or `dir` on Windows) and press
@@ -263,16 +263,18 @@ is nothing to play, and the button says so by greying out and showing `—`.
 Reload the page afterwards. Nothing else depends on this — recording, answer
 checking, and scheduling all work without a voice installed.
 
-### Windows without Git Bash
+### Windows
 
-`SETUP.sh` needs a Unix-style shell. In Command Prompt or PowerShell, skip the
-script and run the server directly:
+Use **[`SETUP.cmd`](SETUP.cmd)** instead of `SETUP.sh` — double-click it, no
+Git Bash needed. Full walkthrough, including the firewall prompt and the
+Microsoft Store Python trap: **[INSTALL-Windows.md](INSTALL-Windows.md)**.
+
+If you'd rather not use the launcher, run the server directly from Command
+Prompt or PowerShell:
 
 ```
-python server.py
+py server.py --auto-port --open
 ```
-
-Then open http://localhost:8788 yourself.
 
 ## A little git, if you used Option B
 
